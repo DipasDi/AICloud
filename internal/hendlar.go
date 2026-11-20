@@ -2,11 +2,14 @@ package internal
 
 import (
 	"AICloud/internal/ai"
+	"AICloud/internal/database"
 	"fmt"
 	"html"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mymmrac/telego"
@@ -17,6 +20,28 @@ import (
 // Обработчик команд
 func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 
+	// //Обработка если это просто медиа
+	// bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+	// 	switch {
+	// 	case message.Voice != nil:
+	// 		fmt.Println("voice")
+	// 		FileVoice(bh, bot, ctx, message)
+
+	// 	case message.Photo != nil:
+	// 		fmt.Println("photo")
+	// 	case message.Audio != nil:
+	// 		fmt.Println("audio")
+	// 	case message.Document != nil:
+	// 		fmt.Println("document")
+	// 	case message.Sticker != nil:
+	// 		fmt.Println("sticker")
+	// 	case message.Video != nil:
+	// 		fmt.Println("video")
+	// 	}
+
+	// 	return nil
+	// }, th.AnyMessageWithMedia())
+
 	// Собираем кнопки start в один ряд
 	keyboard := tu.InlineKeyboard(
 		tu.InlineKeyboardRow(
@@ -24,28 +49,6 @@ func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 			tu.InlineKeyboardButton("ТГК разработчика").WithURL("https://t.me/DipasDEV"),
 		),
 	)
-
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-
-		switch {
-		case message.Voice != nil:
-			fmt.Println("voice")
-			FileVoice(bh, bot, ctx, message)
-
-		case message.Photo != nil:
-			fmt.Println("photo")
-		case message.Audio != nil:
-			fmt.Println("audio")
-		case message.Document != nil:
-			fmt.Println("document")
-		case message.Sticker != nil:
-			fmt.Println("sticker")
-		case message.Video != nil:
-			fmt.Println("video")
-		}
-
-		return nil
-	}, th.AnyMessageWithMedia())
 
 	//Комманда Start
 	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
@@ -86,6 +89,169 @@ func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 		)
 		return err
 	}, th.CommandEqual("start"))
+
+	// Обработка текстовых команд
+	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+		var mediaType string
+
+		//Проверяем есть ли прикреплённая медиа
+		switch {
+
+		case message.Voice != nil:
+			fmt.Println("voice")
+			mediaType = "voice"
+			// FileVoice(bh, bot, ctx, message)
+
+		case message.Photo != nil:
+			fmt.Println("photo")
+			mediaType = "photo"
+
+		case message.Audio != nil:
+			fmt.Println("audio")
+			mediaType = "audio"
+
+		case message.Document != nil:
+			fmt.Println("document")
+			mediaType = "document"
+
+		case message.Sticker != nil:
+			fmt.Println("sticker")
+			mediaType = "sticker"
+
+		case message.Video != nil:
+			fmt.Println("video")
+			mediaType = "video"
+		default:
+			mediaType = "message"
+		}
+
+		err := CheckFormCommand(ctx, message, mediaType)
+		if err != nil {
+			return fmt.Errorf("ошибка проверки текстовоый коммнды %v ", err)
+		}
+		return nil
+	})
+}
+
+// Проверка текста на команду
+func CheckFormCommand(ctx *th.Context, message telego.Message, mediaType string) error {
+	var err error
+
+	// Убираем пробелы
+	text := strings.TrimSpace(message.Text)
+
+	// Проверка текста на комманды
+	if msg, ok := strings.CutPrefix(text, "+"); ok {
+		text = strings.TrimSpace(msg)
+
+		// 1. Отправляем начальный статус
+		statusMsg, err := ctx.Bot().SendMessage(ctx, tu.Message(
+			message.Chat.ChatID(),
+			"⏳ <i>Получаю эмбеддинг от ИИ...</i>",
+		).WithParseMode(telego.ModeHTML))
+		if err != nil {
+			return fmt.Errorf("ошибка отправки статуса: %v", err)
+		}
+
+		// 2. Получаем embedding
+		embedding, err := ai.GetEmbedding(text)
+		if err != nil {
+			_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
+				statusMsg.Chat.ChatID(),
+				statusMsg.MessageID,
+				"❌ <b>Ошибка ИИ при получении эмбеддинга</b>",
+			).WithParseMode(telego.ModeHTML))
+			return fmt.Errorf("ошибка получения Embedding от ИИ: %v", err)
+		}
+
+		// 3. Обновляем статус перед сохранением
+		_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
+			statusMsg.Chat.ChatID(),
+			statusMsg.MessageID,
+			"💾 <i>Сохраняю в базу данных...</i>",
+		).WithParseMode(telego.ModeHTML))
+
+		args := make([]any, 0, 7)
+		var query string
+
+		// Если нет медиа - сохраняем как текстовое сообщение
+		if mediaType == "" {
+			mediaType = "message"
+		}
+
+		var userID int64
+		if message.From != nil {
+			userID = message.From.ID
+		}
+
+		query = `INSERT INTO items (user_id, chat_id, target_type, tg_message_id, comment, embedding, embedding_model)
+					VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+
+		args = append(args,
+			userID,                   // $1: user_id
+			message.Chat.ID,          // $2: chat_id
+			mediaType,                // $3: target_type ('message')
+			message.MessageID,        // $4: tg_message_id
+			text,                     // $5: comment (текст заметки)
+			FormatVector(embedding),  // $6: embedding
+			os.Getenv("EMBED_MODEL"), // $7: embedding_model
+		)
+
+		var itemID int64
+		err = database.ConnPSQL.QueryRow(ctx, query, args...).Scan(&itemID)
+		if err != nil {
+			_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
+				statusMsg.Chat.ChatID(),
+				statusMsg.MessageID,
+				"❌ <b>Ошибка сохранения в базу данных</b>",
+			).WithParseMode(telego.ModeHTML))
+			log.Println("Ошибка записи в базу: ", err)
+			return fmt.Errorf("ошибка записи: %v", err)
+		}
+
+		// 4. Финальный статус об успешном завершении
+		previewText := text
+		if len([]rune(previewText)) > 120 {
+			previewText = string([]rune(previewText)[:120]) + "..."
+		}
+
+		finalText := fmt.Sprintf(
+			"✅ <b>Заметка #%d сохранена!</b>\n\n"+
+				"<blockquote>%s</blockquote>\n"+
+				"💡 <i>Сможешь найти её по смыслу через поиск.</i>",
+			itemID,
+			html.EscapeString(previewText),
+		)
+
+		keyboard := tu.InlineKeyboard(
+			tu.InlineKeyboardRow(
+				tu.InlineKeyboardButton("⏰ Напомнить").WithCallbackData(fmt.Sprintf("remind:%d", itemID)),
+				tu.InlineKeyboardButton("📁 В папку").WithCallbackData(fmt.Sprintf("folder:%d", itemID)),
+				tu.InlineKeyboardButton("🗑 Удалить").WithCallbackData(fmt.Sprintf("delete:%d", itemID)),
+			),
+		)
+
+		_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
+			statusMsg.Chat.ChatID(),
+			statusMsg.MessageID,
+			finalText,
+		).WithParseMode(telego.ModeHTML).WithReplyMarkup(keyboard))
+	}
+
+	return err
+}
+
+func FormatVector(v []float32) string {
+	var sb strings.Builder
+	sb.WriteByte('[')
+	for i, val := range v {
+		if i > 0 {
+			sb.WriteByte(',')
+		}
+		sb.WriteString(strconv.FormatFloat(float64(val), 'f', -1, 32))
+	}
+	sb.WriteByte(']')
+	return sb.String()
 }
 
 func GetFileBytes(url string) []byte {
@@ -121,9 +287,10 @@ func FileVoice(bh *th.BotHandler, bot *telego.Bot, ctx *th.Context, message tele
 	url := bot.FileDownloadURL(tgFile.FilePath)
 	audioBytes := GetFileBytes(url)
 
-	text, err := ai.AINalysisVoice(ctx, audioBytes)
+	text, err := ai.AnalysisVoice(ctx, audioBytes)
 
 	var finalMsg string
+	var analiz bool
 	cleanText := strings.TrimSpace(text)
 
 	switch {
@@ -142,14 +309,19 @@ func FileVoice(bh *th.BotHandler, bot *telego.Bot, ctx *th.Context, message tele
 		finalMsg = fmt.Sprintf(
 			"🎙 <b>Перевёл с голосового на человеческий:</b>\n"+
 				"<blockquote>%s</blockquote>\n"+
-				"<i>Если что-то переврал - виновата дикция, но я старался.</i>",
+				"<i>Если что-то переврал - виновата дикция, но я старался. Начинаю разбор</i>",
 			html.EscapeString(cleanText),
 		)
+		analiz = true
 	}
 
 	// 4. Плавно заменяем "Слушаю..." на готовый результат
 	_, err = bot.EditMessageText(ctx, tu.EditMessageText(chatID, statusMsg.MessageID, finalMsg).WithParseMode(telego.ModeHTML))
 	if err != nil {
 		log.Println("Ошибка редактирования сообщения:", err)
+	}
+
+	if analiz {
+
 	}
 }

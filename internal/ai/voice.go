@@ -16,7 +16,7 @@ type GroqTranscriptionResponse struct {
 	Text string `json:"text"`
 }
 
-func AINalysisVoice(ctx context.Context, audio []byte) (string, error) {
+func AnalysisVoice(ctx context.Context, audio []byte) (string, error) {
 	var body bytes.Buffer
 	writer := multipart.NewWriter(&body)
 
