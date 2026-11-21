@@ -23,6 +23,10 @@ func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 			return HandleSaveItem(ctx, message, strings.TrimSpace(text))
 		}
 
+		if text, ok := strings.CutPrefix(strings.TrimSpace(rawText), "?"); ok {
+			return SearchItem(ctx, message, strings.TrimSpace(text))
+		}
+
 		return nil
 	})
 }

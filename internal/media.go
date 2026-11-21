@@ -78,7 +78,6 @@ func FileVoice(bh *th.BotHandler, bot *telego.Bot, ctx *th.Context, message tele
 	text, err := ai.AnalysisVoice(ctx, audioBytes)
 
 	var finalMsg string
-	var analiz bool
 	cleanText := strings.TrimSpace(text)
 
 	switch {
@@ -100,15 +99,10 @@ func FileVoice(bh *th.BotHandler, bot *telego.Bot, ctx *th.Context, message tele
 				"<i>Если что-то переврал - виновата дикция, но я старался. Начинаю разбор</i>",
 			html.EscapeString(cleanText),
 		)
-		analiz = true
 	}
 
 	_, err = bot.EditMessageText(ctx, tu.EditMessageText(chatID, statusMsg.MessageID, finalMsg).WithParseMode(telego.ModeHTML))
 	if err != nil {
 		log.Println("Ошибка редактирования сообщения:", err)
-	}
-
-	if analiz {
-
 	}
 }

@@ -14,7 +14,7 @@ import (
 // sendOpenRouterRequest выполняет базовый HTTP-запрос к API OpenRouter
 func sendOpenRouterRequest(endpoint string, reqBody []byte) ([]byte, error) {
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 80 * time.Second,
 	}
 
 	req, err := http.NewRequest("POST", "https://openrouter.ai/api/v1"+endpoint, bytes.NewBuffer(reqBody))
