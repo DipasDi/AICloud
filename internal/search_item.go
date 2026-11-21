@@ -83,7 +83,7 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 	_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
 		statusMsg.Chat.ChatID(),
 		statusMsg.MessageID,
-		fmt.Sprintf("🔍 В тексте совпадений нет.\n🧠 <i>Ищу по смыслу через нейросеть...</i>"),
+		"🔍 В тексте совпадений нет.\n🧠 <i>Ищу по смыслу через нейросеть...</i>",
 	).WithParseMode(telego.ModeHTML))
 
 	embedding, err := ai.GetEmbedding(text)
