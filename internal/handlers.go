@@ -12,8 +12,16 @@ func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 	// Команда /start
 	bh.HandleMessage(HandleStart, th.CommandEqual("start"))
 
-	// Обработка текстовых и медиа заметок (начинается с "+")
+	bh.HandleCallbackQuery(HandleDeleteCallback, th.CallbackDataPrefix("delete:"))
+	bh.HandleCallbackQuery(HandleHideCallback, th.CallbackDataEqual("hide"))
+
+	// Обработка текстовых, медиа и голосовых сообщений
 	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+		// Обработка голосовых сообщений
+		if message.Voice != nil {
+			return HandleVoiceMessage(ctx, message)
+		}
+
 		rawText := message.Text
 		if rawText == "" {
 			rawText = message.Caption
@@ -23,10 +31,15 @@ func NewHandler(bh *th.BotHandler, bot *telego.Bot) {
 			return HandleSaveItem(ctx, message, strings.TrimSpace(text))
 		}
 
-		if text, ok := strings.CutPrefix(strings.TrimSpace(rawText), "?"); ok {
-			return SearchItem(ctx, message, strings.TrimSpace(text))
+		if message.ReplyToMessage != nil {
+			return HandleEditComment(ctx, message, rawText)
 		}
 
-		return nil
+		if text, ok := strings.CutPrefix(strings.TrimSpace(rawText), "?"); ok {
+			return SearchItem(ctx, message, strings.TrimSpace(text))
+		} else {
+			return HandleSaveItem(ctx, message, strings.TrimSpace(rawText))
+		}
+
 	})
 }

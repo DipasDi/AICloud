@@ -15,18 +15,31 @@ import (
 
 // HandleSaveItem сохраняет входящую заметку (текст или с медиа) в базу данных
 func HandleSaveItem(ctx *th.Context, message telego.Message, text string) error {
+	return HandleSaveItemWithStatus(ctx, message, text, nil)
+}
+
+// HandleSaveItemWithStatus сохраняет заметку, переиспользуя существующее статус-сообщение (если есть)
+func HandleSaveItemWithStatus(ctx *th.Context, message telego.Message, text string, statusMsg *telego.Message) error {
 	var err error
 
 	// Извлечение данных медиа и получение типа
 	mediaInfo := ExtractMediaInfo(message)
 
-	// Отправляем начальный статус пользователю
-	statusMsg, err := ctx.Bot().SendMessage(ctx, tu.Message(
-		message.Chat.ChatID(),
-		"⏳ <i>Получаю эмбеддинг от ИИ...</i>",
-	).WithParseMode(telego.ModeHTML))
-	if err != nil {
-		return fmt.Errorf("ошибка отправки статуса: %v", err)
+	// Отправляем или обновляем начальный статус пользователю
+	if statusMsg == nil {
+		statusMsg, err = ctx.Bot().SendMessage(ctx, tu.Message(
+			message.Chat.ChatID(),
+			"⏳ <i>Получаю эмбеддинг от ИИ...</i>",
+		).WithParseMode(telego.ModeHTML))
+		if err != nil {
+			return fmt.Errorf("ошибка отправки статуса: %v", err)
+		}
+	} else {
+		_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
+			statusMsg.Chat.ChatID(),
+			statusMsg.MessageID,
+			"⏳ <i>Получаю эмбеддинг от ИИ...</i>",
+		).WithParseMode(telego.ModeHTML))
 	}
 
 	// Отправляем и получаем вектор от ИИ
@@ -105,6 +118,16 @@ func HandleSaveItem(ctx *th.Context, message telego.Message, text string) error 
 		itemID,
 		html.EscapeString(previewText),
 	)
+
+	if mediaInfo.TargetType == "voice" {
+		finalText = fmt.Sprintf(
+			"🎙 <b>Перевёл с голосового на человеческий (#%d):</b>\n\n"+
+				"<blockquote>%s</blockquote>\n"+
+				"<i>Если что-то переврал - виновата дикция, но я старался.</i>",
+			itemID,
+			html.EscapeString(previewText),
+		)
+	}
 
 	keyboard := tu.InlineKeyboard(
 		tu.InlineKeyboardRow(

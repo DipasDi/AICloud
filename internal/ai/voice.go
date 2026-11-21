@@ -44,8 +44,13 @@ func AnalysisVoice(ctx context.Context, audio []byte) (string, error) {
 		return "", err
 	}
 
+	apiKey := os.Getenv("QROQ_API_KEY")
+	if apiKey == "" {
+		return "", fmt.Errorf("не задан API ключ Groq (QROQ_API_KEY или GROQ_API_KEY)")
+	}
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("QROQ_API_KEY"))
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)

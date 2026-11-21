@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html"
 	"strings"
+	"time"
 
 	"github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
@@ -14,6 +15,9 @@ import (
 )
 
 func SearchItem(ctx *th.Context, message telego.Message, text string) error {
+
+	ctx.Bot().DeleteMessage(ctx, tu.Delete(message.Chat.ChatID(), message.MessageID))
+
 	// Отправляем начальный статус пользователю
 	statusMsg, err := ctx.Bot().SendMessage(ctx, tu.Message(
 		message.Chat.ChatID(),
@@ -143,12 +147,21 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 		}
 	}
 
+	hideKeyboard := tu.InlineKeyboard(
+		tu.InlineKeyboardRow(
+			tu.InlineKeyboardButton("❌ Скрыть").WithCallbackData("hide"),
+		),
+	)
+
 	if len(aiItems) == 0 {
 		_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(
 			statusMsg.Chat.ChatID(),
 			statusMsg.MessageID,
 			fmt.Sprintf("🔍 По запросу «%s» ничего не найдено ни в тексте, ни по смыслу.", html.EscapeString(text)),
-		).WithParseMode(telego.ModeHTML))
+		).WithParseMode(telego.ModeHTML).WithReplyMarkup(hideKeyboard))
+		time.Sleep(4 * time.Second)
+		ctx.Bot().DeleteMessage(ctx, tu.Delete(message.Chat.ChatID(), statusMsg.MessageID))
+
 		return nil
 	}
 
@@ -159,13 +172,20 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 // sendSearchResults отправляет результаты: реплаем на исходное сообщение
 func sendSearchResults(ctx *th.Context, statusMsg *telego.Message, title string, items []models.Item) {
 	chatID := statusMsg.Chat.ChatID()
+	hideKeyboard := tu.InlineKeyboard(
+		tu.InlineKeyboardRow(
+			tu.InlineKeyboardButton("❌ Скрыть").WithCallbackData("hide"),
+		),
+	)
 
 	if len(items) == 1 {
 		it := items[0]
 		_ = ctx.Bot().DeleteMessage(ctx, tu.Delete(chatID, statusMsg.MessageID))
 
 		msgText := fmt.Sprintf("%s\n\n%s", title, formatSingleItem(it))
-		msg := tu.Message(chatID, msgText).WithParseMode(telego.ModeHTML)
+		msg := tu.Message(chatID, msgText).
+			WithParseMode(telego.ModeHTML).
+			WithReplyMarkup(hideKeyboard)
 
 		if it.TgMessageID != 0 {
 			msg.WithReplyParameters(&telego.ReplyParameters{
@@ -182,7 +202,7 @@ func sendSearchResults(ctx *th.Context, statusMsg *telego.Message, title string,
 		chatID,
 		statusMsg.MessageID,
 		formatSearchResults(title, items),
-	).WithParseMode(telego.ModeHTML))
+	).WithParseMode(telego.ModeHTML).WithReplyMarkup(hideKeyboard))
 }
 
 // formatSingleItem форматирует одну найденную запись

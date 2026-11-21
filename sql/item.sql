@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS items (
     user_id BIGINT NOT NULL,
     chat_id BIGINT NOT NULL,
     target_type TEXT NOT NULL CHECK (
-        target_type IN ('file', 'message', 'photo', 'link')
+        target_type IN ('file', 'message', 'photo', 'link', 'voice')
     ),
     tg_file_id TEXT NOT NULL DEFAULT '',
     tg_message_id BIGINT NOT NULL DEFAULT 0,
@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS items (
     group_name TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    -- Векторный поиск
-    embedding vector(4096),
+    -- Векторный поиск (Gemini 768 dim)
+    embedding vector(768),
     -- NULL, пока вектор не посчитан
     embedding_model TEXT,
     -- какой моделью посчитан
@@ -41,6 +41,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_items_chat_msg ON items(chat_id, tg_message
 WHERE tg_message_id <> 0;
 -- Поиск
 CREATE INDEX IF NOT EXISTS idx_items_search ON items USING GIN(search_vector);
+-- HNSW индекс для мгновенного семантического поиска
 CREATE INDEX IF NOT EXISTS idx_items_embedding ON items USING hnsw (embedding vector_cosine_ops);
 -- Автообновление updated_at
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$ BEGIN NEW.updated_at = NOW();
