@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -10,15 +11,29 @@ import (
 
 func TestAnalyzerText(t *testing.T) {
 	_ = godotenv.Load("../../.env")
-
-	// 1. Проверяем работу через Groq
 	os.Setenv("INTENT_PROVIDER", "groq")
-	intentGroq, err := AnalyzerText(context.Background(), "Помоги мне найти про Дораму мой демон и сохранить.")
+
+	// 1. Поиск
+	searchIntent, err := AnalyzerText(context.Background(), "Помоги мне найти про Дораму мой демон и сохранить.")
 	if err != nil {
-		t.Fatalf("AnalyzerText (Groq) failed: %v", err)
+		t.Fatalf("Search test failed: %v", err)
 	}
-	if intentGroq.Action != "search" {
-		t.Errorf("Groq expected action 'search', got '%s'", intentGroq.Action)
+	if searchIntent.Action != "search" {
+		t.Errorf("expected action 'search', got '%s'", searchIntent.Action)
 	}
-	t.Logf("Groq Result: action=%s, query=%s", intentGroq.Action, intentGroq.Query)
+	t.Logf("Search result: %s", searchIntent.Query)
+
+	// 2. Дополнение описания по запросу
+	enrichIntent, err := AnalyzerText(context.Background(), "Сохрани, посмотри Дораму, мой демон С небольшим описанием Чтоб там было описание, сам найди и сам допиши")
+	if err != nil {
+		t.Fatalf("Enrich test failed: %v", err)
+	}
+	if enrichIntent.Action != "save" {
+		t.Errorf("expected action 'save', got '%s'", enrichIntent.Action)
+	}
+	// Проверяем, что нейросеть сгенерировала описание, а не просто повторила фразу "с описанием"
+	if len(enrichIntent.Query) < 40 || !strings.Contains(strings.ToLower(enrichIntent.Query), "демон") {
+		t.Errorf("expected detailed enriched query, got '%s'", enrichIntent.Query)
+	}
+	t.Logf("Enriched result:\n%s", enrichIntent.Query)
 }

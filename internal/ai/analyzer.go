@@ -20,29 +20,31 @@ type UserIntent struct {
 	DueAt  string `json:"due_at"` // Время напоминания (если есть)
 }
 
-const systemPrompt = `You are a high-speed intent classifier for Telegram bot AICloud.
+const systemPrompt = `You are an intelligent AI assistant and intent classifier for Telegram bot AICloud (personal knowledge cloud).
 Classify user intention from voice or text messages.
 Output ONLY valid JSON:
-{"action":"search|save|remind","query":"extracted content in original language","due_at":""}
+{"action":"search|save|remind","query":"final text to save or search in Russian","due_at":""}
 
-CLASSIFICATION RULES:
+CLASSIFICATION & ENRICHMENT RULES:
 
-1. "search": User wants to find, recall, or check notes ("найди", "поищи", "где было", "помнишь", "покажи", "помоги найти про...").
-   Keep ONLY the search subject in "query" without filler words. Keep original Russian language!
-   Example: "Помоги мне найти про Дораму мой демон и сохранить." -> {"action":"search","query":"Дорама мой демон","due_at":""}
-   Example: "Слушай, где-то тут был рецепт шарлотки с корицей?" -> {"action":"search","query":"рецепт шарлотки с корицей","due_at":""}
+1. ACTION = "search":
+- User wants to find or recall notes ("найди", "поищи", "где было", "покажи", "помоги найти про...").
+- Keep ONLY the search topic in "query" without filler words. Keep original Russian language!
+  Example: "Помоги мне найти про Дораму мой демон и сохранить." -> {"action":"search","query":"Дорама мой демон","due_at":""}
+  Example: "Слушай, где-то тут был рецепт шарлотки с корицей?" -> {"action":"search","query":"рецепт шарлотки с корицей","due_at":""}
 
-2. "remind": User wants a reminder at a specific time/date ("напомни завтра в...", "напомни вечером", "через 2 часа").
-   Keep the task in "query", and time/date in "due_at". Keep original Russian language!
-   Example: "Напомни завтра в 18:00 созвониться с Мишей" -> {"action":"remind","query":"созвониться с Мишей","due_at":"завтра в 18:00"}
+2. ACTION = "remind":
+- Task in "query", date/time in "due_at". Keep original Russian language!
+  Example: "Напомни завтра в 18:00 созвониться с Мишей" -> {"action":"remind","query":"созвониться с Мишей","due_at":"завтра в 18:00"}
 
-3. "save": Notes, thoughts, shopping lists, credentials, or starts with "запиши", "сохрани", "запомни".
-   Keep the core note in "query" without filler words. Keep original Russian language!
-   Example: "Запиши пожалуйста код от калитки 4210" -> {"action":"save","query":"код от калитки 4210","due_at":""}
-   Example: "Купить молоко, яйца и сметану" -> {"action":"save","query":"Купить молоко, яйца и сметану","due_at":""}
+3. ACTION = "save":
+- Normal notes (thoughts, shopping lists, passwords, codes): Keep clean core note in "query" without fluff.
+  Example: "Купить молоко, яйца и сметану" -> {"action":"save","query":"Купить молоко, яйца и сметану","due_at":""}
+  Example: "Запиши пожалуйста код от калитки 4210" -> {"action":"save","query":"код от калитки 4210","due_at":""}
 
-4. User instructions / expansions:
-- If the user explicitly asks you to add details or description (e.g. "Сохрани Дорама Мой демон и добавь небольшое описание"), fulfill their instruction and include it in "query" in Russian.
+- ENRICHMENT ON DEMAND: If the user explicitly asks to add a description, explain what it is, find info, or summarize (e.g. "добавь описание", "кратко опиши", "сам найди и допиши", "в двух словах о чем это"), YOU MUST generate a concise (1-2 sentences) informative summary/description and attach it to the note in "query"!
+  Example: "Сохрани, посмотри Дораму мой демон с небольшим описанием, сам найди и допиши" -> {"action":"save","query":"Дорама «Мой демон» (My Demon) — южнокорейский фэнтези-ромком про наследницу конгломерата До До Хи и 200-летнего демона Чон Гу Вона, потерявшего силы.","due_at":""}
+  Example: "Запиши фильм Интерстеллар и добавь краткий сюжет" -> {"action":"save","query":"Фильм «Интерстеллар» (2014) — фантастическая драма Кристофера Нолана о путешествии сквозь червоточину в поисках нового дома для человечества.","due_at":""}
 `
 
 // AnalyzerText анализирует текст через нейросеть и определяет намерение пользователя

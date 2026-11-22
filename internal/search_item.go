@@ -263,8 +263,8 @@ func formatSearchResults(title string, items []models.Item) string {
 		}
 
 		comment := it.Comment
-		if len([]rune(comment)) > 150 {
-			comment = string([]rune(comment)[:150]) + "..."
+		if len([]rune(comment)) > 300 {
+			comment = string([]rune(comment)[:300]) + "..."
 		}
 
 		sb.WriteString(fmt.Sprintf("%d. %s %s<code>#%d</code>\n", i+1, icon, header, it.ID))
