@@ -1,0 +1,3795 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AICloud - Telegram Second Brain</title>
+  <style>
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Telegram Brand & AI Accents */
+      --tg-blue: #2AABEE;
+      --tg-blue-deep: #2481cc;
+      --tg-blue-glow: rgba(42, 171, 238, 0.28);
+      --ai-violet: #8b5cf6;
+      --ai-cyan: #22d3ee;
+      --ai-gradient: linear-gradient(135deg, #2AABEE 0%, #6366f1 50%, #a855f7 100%);
+      --ai-gradient-soft: linear-gradient(135deg, rgba(42, 171, 238, 0.12) 0%, rgba(139, 92, 246, 0.14) 100%);
+      --green-online: #22c55e;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+
+      /* Default Light Theme (Telegram Day Liquid Glass) */
+      --bg-base: #f0f4f9;
+      --bg-elevated: #ffffff;
+      --glass-bg: rgba(255, 255, 255, 0.78);
+      --glass-bg-hover: rgba(255, 255, 255, 0.95);
+      --glass-bg-strong: rgba(255, 255, 255, 0.94);
+      --glass-sidebar: rgba(246, 250, 255, 0.88);
+      --glass-input: rgba(241, 246, 252, 0.92);
+      --glass-border: rgba(36, 129, 204, 0.16);
+      --glass-border-hover: rgba(42, 171, 238, 0.55);
+      --specular-top: rgba(255, 255, 255, 0.95);
+      --shadow-card: 0 10px 30px -10px rgba(24, 56, 98, 0.08), 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+      --shadow-card-hover: 0 18px 38px -12px rgba(36, 129, 204, 0.2), 0 0 0 1px rgba(42, 171, 238, 0.25);
+      --shadow-float: 0 16px 40px -12px rgba(24, 56, 98, 0.14);
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --chip-bg: rgba(36, 129, 204, 0.08);
+      --chip-hover: rgba(42, 171, 238, 0.18);
+      --divider: rgba(15, 23, 42, 0.08);
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+      --wave-inactive: rgba(100, 116, 139, 0.32);
+      --backdrop-modal: rgba(15, 23, 42, 0.45);
+      --blob-opacity: 0.22;
+    }
+
+    [data-theme="dark"] {
+      /* Dark Theme (Telegram Night Liquid Glass) */
+      --bg-base: #0b0f19;
+      --bg-elevated: #0e1621;
+      --glass-bg: rgba(17, 25, 40, 0.64);
+      --glass-bg-hover: rgba(23, 34, 54, 0.82);
+      --glass-bg-strong: rgba(14, 22, 33, 0.88);
+      --glass-sidebar: rgba(12, 18, 30, 0.75);
+      --glass-input: rgba(10, 15, 26, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-border-hover: rgba(42, 171, 238, 0.5);
+      --specular-top: rgba(255, 255, 255, 0.16);
+      --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      --shadow-card-hover: 0 20px 44px -10px rgba(0, 0, 0, 0.7), 0 0 28px -6px rgba(42, 171, 238, 0.3);
+      --shadow-float: 0 18px 48px -12px rgba(0, 0, 0, 0.65), 0 0 24px -6px rgba(42, 171, 238, 0.25);
+
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --chip-bg: rgba(255, 255, 255, 0.06);
+      --chip-hover: rgba(42, 171, 238, 0.18);
+      --divider: rgba(255, 255, 255, 0.08);
+      --code-bg: rgba(7, 11, 20, 0.92);
+      --code-text: #e2e8f0;
+      --wave-inactive: rgba(148, 163, 184, 0.35);
+      --backdrop-modal: rgba(5, 8, 16, 0.75);
+      --blob-opacity: 0.32;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-sans);
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Liquid Background */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: var(--blob-opacity);
+      animation: floatOrb 22s ease-in-out infinite alternate;
+    }
+
+    .orb-1 {
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, #2AABEE 0%, transparent 70%);
+      top: -140px;
+      left: -100px;
+    }
+
+    .orb-2 {
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
+      top: 18%;
+      right: -120px;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 460px;
+      height: 460px;
+      background: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+      bottom: -160px;
+      left: 32%;
+      animation-delay: -13s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(28px, -22px) scale(1.06); }
+      100% { transform: translate(-24px, 26px) scale(0.96); }
+    }
+
+    /* Layout Shell */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 288px;
+      flex-shrink: 0;
+      background: var(--glass-sidebar);
+      backdrop-filter: blur(26px) saturate(180%);
+      -webkit-backdrop-filter: blur(26px) saturate(180%);
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      padding: 18px 14px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s ease;
+      z-index: 40;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--divider);
+      border-radius: 99px;
+    }
+
+    .sidebar.collapsed {
+      width: 78px;
+      padding: 18px 10px;
+    }
+
+    .sidebar.collapsed .hide-on-collapse {
+      display: none !important;
+    }
+
+    .sidebar.collapsed .brand-row {
+      justify-content: center;
+    }
+
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .sidebar.collapsed .ext-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar.collapsed .ext-pill {
+      justify-content: center;
+      padding: 8px 4px;
+    }
+
+    /* Brand Header */
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 4px 6px;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #2AABEE 0%, #2481cc 60%, #6366f1 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px -4px rgba(42, 171, 238, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+      color: #fff;
+    }
+
+    .brand-meta {
+      min-width: 0;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .verified-badge {
+      width: 16px;
+      height: 16px;
+      color: var(--tg-blue);
+      flex-shrink: 0;
+    }
+
+    .bot-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green-online);
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: pulseGreen 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulseGreen {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:hover {
+      background: var(--chip-hover);
+      color: var(--tg-blue);
+      border-color: var(--glass-border-hover);
+    }
+
+    /* SVG Wrapper Helpers */
+    .svg-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .svg-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 10px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .add-folder-btn {
+      background: transparent;
+      border: none;
+      color: var(--tg-blue);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .add-folder-btn:hover {
+      background: var(--chip-hover);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: var(--chip-bg);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(42, 171, 238, 0.18) 0%, rgba(99, 102, 241, 0.14) 100%);
+      border-color: rgba(42, 171, 238, 0.35);
+      color: var(--text-primary);
+      box-shadow: 0 4px 14px -4px rgba(42, 171, 238, 0.2);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--tg-blue);
+    }
+
+    .nav-item:not(.active) .nav-icon {
+      color: var(--text-secondary);
+    }
+
+    .nav-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-count {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--chip-bg);
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .nav-item.active .nav-count {
+      background: var(--tg-blue);
+      color: #fff;
+    }
+
+    /* Extensions Grid */
+    .ext-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      padding: 0 4px;
+    }
+
+    .ext-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 9px;
+      border-radius: 11px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .ext-pill .nav-icon {
+      color: var(--tg-blue);
+    }
+
+    .ext-pill:hover {
+      border-color: var(--glass-border-hover);
+      background: var(--chip-hover);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    .ext-pill.active {
+      background: rgba(42, 171, 238, 0.2);
+      border-color: var(--tg-blue);
+      color: var(--text-primary);
+      box-shadow: 0 4px 12px -4px rgba(42, 171, 238, 0.3);
+    }
+
+    .ext-sub {
+      display: block;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .help-cta {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 13px;
+      border: 1px solid rgba(42, 171, 238, 0.35);
+      background: var(--ai-gradient-soft);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+    }
+
+    .help-cta:hover {
+      transform: translateY(-1px);
+      border-color: var(--tg-blue);
+      box-shadow: 0 8px 20px -6px rgba(42, 171, 238, 0.35);
+    }
+
+    .author-links {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 2px 6px;
+      font-size: 11.5px;
+    }
+
+    .author-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .author-link:hover {
+      color: var(--tg-blue);
+    }
+
+    /* Main Area */
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      padding: 20px 28px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    /* Top Command Center */
+    .top-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: sticky;
+      top: 14px;
+      z-index: 30;
+    }
+
+    .command-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    .command-center {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px 8px 16px;
+      border-radius: 18px;
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-float), inset 0 1px 0 var(--specular-top);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .command-center:focus-within {
+      border-color: var(--tg-blue);
+      box-shadow: var(--shadow-float), 0 0 0 3px rgba(42, 171, 238, 0.16);
+    }
+
+    .search-icon {
+      color: var(--tg-blue);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 120px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14.5px;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .kbd-hint {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 3px 7px;
+      border-radius: 7px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      flex-shrink: 0;
+    }
+
+    .clear-search-btn {
+      border: none;
+      background: var(--chip-bg);
+      color: var(--text-secondary);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .clear-search-btn.visible {
+      display: inline-flex;
+    }
+
+    .mode-segmented {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px;
+      border-radius: 12px;
+      background: var(--chip-bg);
+      border: 1px solid var(--glass-border);
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: var(--ai-gradient);
+      color: #fff;
+      box-shadow: 0 4px 12px -2px rgba(42, 171, 238, 0.45);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .view-toggle {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 13px;
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      gap: 3px;
+    }
+
+    .view-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .view-btn.active {
+      background: rgba(42, 171, 238, 0.18);
+      color: var(--tg-blue);
+    }
+
+    .theme-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(20px);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.22s ease;
+    }
+
+    .theme-btn:hover {
+      border-color: var(--tg-blue);
+      transform: translateY(-1px);
+    }
+
+    /* Suggestion Chips */
+    .chips-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 4px;
+    }
+
+    .chips-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .suggest-chip {
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .suggest-chip:hover {
+      border-color: var(--tg-blue);
+      color: var(--text-primary);
+      background: var(--chip-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Composer */
+    .composer-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 16px 18px;
+      box-shadow: var(--shadow-card), inset 0 1px 0 var(--specular-top);
+      transition: border-color 0.25s, box-shadow 0.25s;
+      position: relative;
+    }
+
+    .composer-card.drag-over {
+      border-color: var(--tg-blue);
+      box-shadow: 0 0 0 3px rgba(42, 171, 238, 0.25), var(--shadow-card-hover);
+      background: rgba(42, 171, 238, 0.08);
+    }
+
+    .composer-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .composer-textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14.5px;
+      line-height: 1.5;
+      min-height: 46px;
+      max-height: 160px;
+    }
+
+    .composer-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .recording-banner {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 13px;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      font-size: 13px;
+    }
+
+    .recording-banner.active {
+      display: flex;
+    }
+
+    .rec-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--rose);
+      animation: pulseRed 1.1s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulseRed {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .rec-stream {
+      flex: 1;
+      color: var(--text-primary);
+      font-style: italic;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rec-timer {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--rose);
+    }
+
+    .attached-file-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 7px 12px;
+      border-radius: 10px;
+      background: rgba(42, 171, 238, 0.14);
+      border: 1px solid rgba(42, 171, 238, 0.32);
+      font-size: 12.5px;
+      width: fit-content;
+    }
+
+    .attached-file-pill.visible {
+      display: inline-flex;
+    }
+
+    .remove-file-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 2px;
+    }
+
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .composer-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-radius: 11px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      border-color: var(--glass-border-hover);
+      color: var(--text-primary);
+      background: var(--chip-hover);
+    }
+
+    .tool-btn.recording {
+      background: rgba(244, 63, 94, 0.18);
+      border-color: var(--rose);
+      color: var(--rose);
+    }
+
+    .ai-toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border-radius: 11px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: var(--ai-gradient-soft);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ai-toggle-label input {
+      accent-color: var(--ai-violet);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .composer-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .folder-select {
+      padding: 7px 11px;
+      border-radius: 11px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .send-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #2AABEE 0%, #2481cc 100%);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 18px -4px rgba(42, 171, 238, 0.5);
+      transition: all 0.2s ease;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px -4px rgba(42, 171, 238, 0.65);
+    }
+
+    /* Feed Header */
+    .feed-meta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 0 4px;
+    }
+
+    .feed-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .feed-heading {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .feed-count-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: var(--chip-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+    }
+
+    .reset-filters-btn {
+      display: none;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      color: var(--tg-blue);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 99px;
+      cursor: pointer;
+    }
+
+    .reset-filters-btn.visible {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Bento Notes Grid */
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .notes-grid.list-view {
+      grid-template-columns: 1fr;
+      max-width: 840px;
+    }
+
+    @media (min-width: 1120px) {
+      .notes-grid:not(.list-view) .note-card.bento-wide {
+        grid-column: span 2;
+      }
+    }
+
+    .note-card {
+      position: relative;
+      background: var(--glass-bg);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: var(--shadow-card), inset 0 1px 0 var(--specular-top);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      animation: cardFadeIn 0.36s ease backwards;
+      overflow: hidden;
+    }
+
+    .note-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--glass-border-hover);
+      background: var(--glass-bg-hover);
+      box-shadow: var(--shadow-card-hover), inset 0 1px 0 var(--specular-top);
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: rgba(42, 171, 238, 0.14);
+      color: var(--tg-blue);
+      border: 1px solid rgba(42, 171, 238, 0.24);
+    }
+
+    .folder-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: var(--chip-bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--glass-border);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .match-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: var(--ai-gradient);
+      color: #fff;
+      box-shadow: 0 4px 12px -3px rgba(139, 92, 246, 0.45);
+    }
+
+    .reminder-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .card-quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+
+    .note-card:hover .card-quick-actions {
+      opacity: 1;
+    }
+
+    .mini-action {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s;
+      font-size: 13px;
+    }
+
+    .mini-action:hover {
+      background: var(--chip-hover);
+      color: var(--tg-blue);
+      border-color: var(--glass-border);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+    }
+
+    .card-text {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: var(--text-secondary);
+    }
+
+    /* Voice Player */
+    .voice-player {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 15px;
+      background: rgba(42, 171, 238, 0.1);
+      border: 1px solid rgba(42, 171, 238, 0.24);
+    }
+
+    .play-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #2AABEE 0%, #2481cc 100%);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 6px 16px -4px rgba(42, 171, 238, 0.6);
+      transition: transform 0.18s ease;
+    }
+
+    .play-btn:hover {
+      transform: scale(1.06);
+    }
+
+    .voice-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3px;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    .wave-bar {
+      flex: 1;
+      min-width: 2.5px;
+      max-width: 4px;
+      border-radius: 99px;
+      background: var(--wave-inactive);
+      transition: background-color 0.14s ease, transform 0.14s ease;
+    }
+
+    .wave-bar.played {
+      background: var(--tg-blue);
+      box-shadow: 0 0 8px rgba(42, 171, 238, 0.45);
+    }
+
+    .voice-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .speed-btn {
+      border: 1px solid rgba(42, 171, 238, 0.32);
+      background: rgba(42, 171, 238, 0.14);
+      color: var(--tg-blue);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .speed-btn:hover {
+      background: var(--tg-blue);
+      color: #fff;
+    }
+
+    /* AI Enrichment */
+    .ai-enrichment {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--ai-gradient-soft);
+      border: 1px solid rgba(139, 92, 246, 0.28);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ai-enrichment-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #6d28d9;
+      letter-spacing: 0.02em;
+    }
+
+    [data-theme="dark"] .ai-enrichment-header {
+      color: #a78bfa;
+    }
+
+    .ai-enrichment-text {
+      font-size: 12.8px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    /* File Box */
+    .file-box {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: var(--glass-input);
+      border: 1px solid var(--glass-border);
+    }
+
+    .file-icon-box {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(42, 171, 238, 0.18), rgba(139, 92, 246, 0.18));
+      border: 1px solid rgba(42, 171, 238, 0.28);
+      color: var(--tg-blue);
+    }
+
+    .file-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .file-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .ext-tag {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 10.5px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(42, 171, 238, 0.16);
+      color: var(--tg-blue);
+      text-transform: uppercase;
+    }
+
+    /* Code Preview */
+    .code-preview {
+      background: var(--code-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .code-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #94a3b8;
+    }
+
+    .code-dots {
+      display: inline-flex;
+      gap: 5px;
+      margin-right: 8px;
+    }
+
+    .code-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .code-content {
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.58;
+      color: var(--code-text);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .tok-kw { color: #c084fc; font-weight: 600; }
+    .tok-fn { color: #38bdf8; }
+    .tok-str { color: #4ade80; }
+    .tok-sql { color: #f59e0b; font-weight: 600; }
+    .tok-com { color: #64748b; font-style: italic; }
+    .tok-num { color: #fb7185; }
+
+    /* Link Preview */
+    .link-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--glass-input);
+      border-left: 3px solid var(--tg-blue);
+      border-top: 1px solid var(--glass-border);
+      border-right: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .link-domain {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--tg-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Photo Frame */
+    .photo-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid var(--divider);
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .tags-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag-item {
+      color: var(--tg-blue);
+      font-weight: 500;
+    }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 56px 24px;
+      border-radius: 22px;
+      background: var(--glass-bg);
+      border: 1px dashed var(--glass-border);
+    }
+
+    .empty-state-icon {
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Native HTML5 Dialogs */
+    dialog {
+      margin: auto;
+      padding: 0;
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      color: var(--text-primary);
+      box-shadow: 0 28px 70px -16px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--specular-top);
+      width: min(680px, calc(100vw - 28px));
+      max-height: calc(100vh - 36px);
+      overflow: hidden;
+    }
+
+    [data-theme="dark"] dialog {
+      box-shadow: 0 28px 70px -16px rgba(0, 0, 0, 0.72), inset 0 1px 0 var(--specular-top);
+    }
+
+    dialog::backdrop {
+      background: var(--backdrop-modal);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    dialog[open] {
+      display: flex;
+      flex-direction: column;
+      animation: dialogPop 0.24s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    @keyframes dialogPop {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .dialog-title {
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dialog-body {
+      padding: 20px 22px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .dialog-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px 22px;
+      border-top: 1px solid var(--divider);
+      background: var(--chip-bg);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .field-input, .field-textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field-input:focus, .field-textarea:focus {
+      border-color: var(--tg-blue);
+    }
+
+    .field-textarea {
+      min-height: 92px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .btn-ai {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: none;
+      background: var(--ai-gradient);
+      color: #fff;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 18px -4px rgba(139, 92, 246, 0.45);
+      transition: all 0.2s;
+    }
+
+    .btn-ai:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--tg-blue);
+      background: var(--chip-hover);
+    }
+
+    .btn-danger {
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--rose);
+      padding: 8px 13px;
+      border-radius: 11px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.22);
+    }
+
+    /* Architecture Grid */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .arch-card {
+      padding: 13px;
+      border-radius: 14px;
+      background: var(--glass-input);
+      border: 1px solid var(--glass-border);
+    }
+
+    .arch-card h4 {
+      font-size: 13.5px;
+      margin-bottom: 4px;
+      color: var(--tg-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .arch-card p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .cmd-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cmd-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--chip-bg);
+      font-size: 13px;
+    }
+
+    .cmd-code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tg-blue);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Icon Picker in Dialog */
+    .icon-picker-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .icon-choice {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: var(--chip-bg);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+    }
+
+    .icon-choice:hover {
+      color: var(--tg-blue);
+      border-color: var(--tg-blue);
+    }
+
+    .icon-choice.selected {
+      border-color: var(--tg-blue);
+      background: rgba(42, 171, 238, 0.2);
+      color: var(--tg-blue);
+      transform: scale(1.08);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 11px 16px;
+      border-radius: 14px;
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(22px);
+      border: 1px solid var(--tg-blue);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.25);
+      animation: toastIn 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile Overlay */
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 35;
+    }
+
+    .mobile-overlay.visible {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%);
+        width: 290px;
+      }
+
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        width: 290px;
+      }
+
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+
+      #collapseSidebarBtn {
+        display: none;
+      }
+
+      .main-area {
+        padding: 14px 16px 40px;
+      }
+
+      .command-center {
+        flex-wrap: wrap;
+        padding: 10px 12px;
+      }
+
+      .kbd-hint {
+        display: none;
+      }
+
+      .mode-segmented {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .mode-btn {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .command-bar-row {
+        flex-wrap: wrap;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-row, .arch-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient Liquid Mesh -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+  </div>
+
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Навигация AICloud">
+      <div class="brand-row">
+        <a class="brand-left" href="https://t.me/MyAiCloud_Bot" target="_blank" rel="noopener noreferrer">
+          <div class="brand-logo" title="AICloud">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+            </svg>
+          </div>
+          <div class="brand-meta hide-on-collapse">
+            <div class="brand-title-row">
+              <span class="brand-title">AICloud</span>
+              <svg class="verified-badge" viewBox="0 0 24 24" fill="currentColor" aria-label="Подтвержденный бот Telegram">
+                <path d="M12 2l2.39 1.94 3.06-.22 1.24 2.82 2.66 1.54-.68 3 1.33 2.78-2.22 2.13-.15 3.07-2.97.81-1.85 2.46L12 21l-2.81 1.33-1.85-2.46-2.97-.81-.15-3.07L2 13.86l1.33-2.78-.68-3 2.66-1.54 1.24-2.82 3.06.22L12 2zm-1.15 13.9l5.3-5.3-1.42-1.42-3.88 3.88-1.68-1.68-1.42 1.42 3.1 3.1z"/>
+              </svg>
+            </div>
+            <div class="bot-status">
+              <span class="pulse-dot"></span>
+              <span>@MyAiCloud_Bot активен</span>
+            </div>
+          </div>
+        </a>
+        <button class="icon-btn" id="collapseSidebarBtn" title="Свернуть панель" aria-label="Свернуть панель">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Quick Filters -->
+      <div class="sidebar-section">
+        <div class="section-header hide-on-collapse">
+          <span>Быстрые фильтры</span>
+        </div>
+        <div id="quickFiltersList"></div>
+      </div>
+
+      <!-- Folders -->
+      <div class="sidebar-section">
+        <div class="section-header hide-on-collapse">
+          <span>Папки</span>
+          <button class="add-folder-btn" id="openNewFolderBtn" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Создать</span>
+          </button>
+        </div>
+        <div id="foldersList"></div>
+      </div>
+
+      <!-- File Extensions Grid -->
+      <div class="sidebar-section">
+        <div class="section-header hide-on-collapse">
+          <span>Типы файлов</span>
+        </div>
+        <div class="ext-grid" id="extGrid"></div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button class="help-cta" id="openHelpBtn" type="button">
+          <span class="svg-icon" style="width:16px;height:16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </span>
+          <span class="hide-on-collapse">Как устроен бот в Telegram</span>
+        </button>
+        <div class="author-links hide-on-collapse">
+          <a class="author-link" href="https://t.me/DipasDEV" target="_blank" rel="noopener noreferrer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>@DipasDEV</span>
+          </a>
+          <a class="author-link" href="https://t.me/dipas_di" target="_blank" rel="noopener noreferrer">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>@dipas_di</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-area">
+      <!-- Floating Command Center -->
+      <header class="top-bar">
+        <div class="command-bar-row">
+          <button class="icon-btn mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Открыть меню">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <div class="command-center">
+            <span class="search-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+            <input
+              type="text"
+              id="searchInput"
+              class="search-input"
+              placeholder="Поиск по смыслу, голосу, файлам или коду..."
+              autocomplete="off"
+            >
+            <button type="button" class="clear-search-btn" id="clearSearchBtn" aria-label="Очистить поиск">✕</button>
+            <span class="kbd-hint">⌘K</span>
+
+            <div class="mode-segmented" role="tablist" aria-label="Режим поиска">
+              <button type="button" class="mode-btn active" data-mode="hybrid">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z"/></svg>
+                <span>Гибридный</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="semantic">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+                <span>По смыслу / AI</span>
+              </button>
+              <button type="button" class="mode-btn" data-mode="exact">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+                <span>Точный</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="top-actions">
+            <div class="view-toggle" role="group" aria-label="Вид карточек">
+              <button type="button" class="view-btn active" id="viewBentoBtn" title="Сетка Bento">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span>Bento</span>
+              </button>
+              <button type="button" class="view-btn" id="viewListBtn" title="Лента">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                <span>Лента</span>
+              </button>
+            </div>
+            <button type="button" class="theme-btn" id="themeToggleBtn" title="Переключить тему (Telegram Day / Night)" aria-label="Переключить тему"></button>
+          </div>
+        </div>
+
+        <!-- Suggestion Chips -->
+        <div class="chips-row">
+          <span class="chips-label">Попробуйте:</span>
+          <button type="button" class="suggest-chip" data-query="корейские сериалы с демонами" data-mode="semantic">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="color:var(--ai-violet)"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            <span>корейские сериалы с демонами</span>
+          </button>
+          <button type="button" class="suggest-chip" data-query="zip" data-mode="hybrid">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+            <span>zip</span>
+          </button>
+          <button type="button" class="suggest-chip" data-query="exe" data-mode="hybrid">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>exe</span>
+          </button>
+          <button type="button" class="suggest-chip" data-query="pgvector" data-mode="hybrid">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>pgvector</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Quick Composer -->
+      <section class="composer-card" id="composerDropZone" aria-label="Быстрый ввод заметки">
+        <div class="composer-top">
+          <textarea
+            id="composerInput"
+            class="composer-textarea"
+            placeholder="Напишите мысль, вставьте ссылку, перетащите файл или запишите голосовое для @MyAiCloud_Bot..."
+          ></textarea>
+        </div>
+
+        <div class="recording-banner" id="recordingBanner">
+          <span class="rec-dot"></span>
+          <span class="rec-stream" id="recStreamText">Слушаю через Groq Whisper Turbo...</span>
+          <span class="rec-timer" id="recTimer">0:00</span>
+        </div>
+
+        <div class="attached-file-pill" id="attachedFilePill">
+          <span class="svg-icon" id="attachedFileIcon" style="width:15px;height:15px;color:var(--tg-blue);"></span>
+          <span id="attachedFileName">file.zip</span>
+          <span id="attachedFileSize" style="color:var(--text-muted)"></span>
+          <button type="button" class="remove-file-btn" id="removeAttachedBtn" aria-label="Убрать файл">✕</button>
+        </div>
+
+        <div class="composer-footer">
+          <div class="composer-tools">
+            <button type="button" class="tool-btn" id="recordVoiceBtn">
+              <span class="svg-icon" style="width:15px;height:15px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </span>
+              <span id="recordBtnLabel">Голосовое</span>
+            </button>
+            <button type="button" class="tool-btn" id="attachFileBtn">
+              <span class="svg-icon" style="width:15px;height:15px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </span>
+              <span>Файл (Drag &amp; Drop)</span>
+            </button>
+            <input type="file" id="fileInputHidden" style="display:none">
+            <label class="ai-toggle-label">
+              <input type="checkbox" id="aiAutoEnrichToggle" checked>
+              <span class="svg-icon" style="width:13px;height:13px;color:var(--ai-violet);">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+              </span>
+              <span>ИИ-дополнение</span>
+            </label>
+          </div>
+
+          <div class="composer-right">
+            <select id="composerFolderSelect" class="folder-select" aria-label="Выбор папки"></select>
+            <button type="button" class="send-btn" id="saveNoteBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              <span>Сохранить</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Feed Header -->
+      <div class="feed-meta-bar">
+        <div class="feed-title-group">
+          <h1 class="feed-heading" id="feedHeading">Все записи</h1>
+          <span class="feed-count-badge" id="feedCountBadge">9 записей</span>
+        </div>
+        <button type="button" class="reset-filters-btn" id="resetFiltersBtn">✕ Сбросить фильтры</button>
+      </div>
+
+      <!-- Bento Grid Feed -->
+      <section class="notes-grid" id="notesGrid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <!-- Note Detail & Edit Modal (Native HTML5 dialog) -->
+  <dialog id="noteDialog" aria-labelledby="noteDialogTitle">
+    <div class="dialog-header">
+      <div class="dialog-title" id="noteDialogTitle">Просмотр заметки</div>
+      <button type="button" class="icon-btn" id="closeNoteDialogBtn" aria-label="Закрыть окно">✕</button>
+    </div>
+    <div class="dialog-body" id="noteDialogBody">
+      <div class="field-group">
+        <label class="field-label" for="editNoteTitle">Заголовок</label>
+        <input type="text" id="editNoteTitle" class="field-input">
+      </div>
+
+      <div id="modalMediaSlot"></div>
+
+      <div class="field-group">
+        <label class="field-label" for="editNoteContent">Полный текст / расшифровка</label>
+        <textarea id="editNoteContent" class="field-textarea"></textarea>
+      </div>
+
+      <div class="ai-enrichment" id="modalAiBox">
+        <div class="ai-enrichment-header" style="justify-content:space-between;">
+          <span style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            <span>Сгенерировано ИИ (Enrichment - Qwen + Gemini)</span>
+          </span>
+          <button type="button" class="btn-ai" id="modalEnrichBtn" style="padding:5px 11px;font-size:11.5px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            <span>Дополнить с ИИ</span>
+          </button>
+        </div>
+        <textarea id="editNoteAi" class="field-textarea" style="min-height:78px;" placeholder="Нажмите «Дополнить с ИИ», чтобы сгенерировать краткое саммари или сюжет..."></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label" for="editNoteFolder">Папка</label>
+          <select id="editNoteFolder" class="field-input"></select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="editNoteReminder">Напоминание</label>
+          <input type="datetime-local" id="editNoteReminder" class="field-input">
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn-danger" id="deleteNoteBtn">Удалить</button>
+        <a class="btn-secondary" id="openTelegramLink" href="https://t.me/MyAiCloud_Bot" target="_blank" rel="noopener noreferrer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Открыть оригинал в Telegram</span>
+        </a>
+      </div>
+      <button type="button" class="send-btn" id="saveModalNoteBtn">Сохранить изменения</button>
+    </div>
+  </dialog>
+
+  <!-- Bot Help Modal (Native HTML5 dialog) -->
+  <dialog id="helpDialog" aria-labelledby="helpDialogTitle">
+    <div class="dialog-header">
+      <div class="dialog-title" id="helpDialogTitle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--tg-blue)"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Как устроен бот @MyAiCloud_Bot</span>
+      </div>
+      <button type="button" class="icon-btn" id="closeHelpDialogBtn" aria-label="Закрыть справку">✕</button>
+    </div>
+    <div class="dialog-body">
+      <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.55;">
+        AICloud - это ваш персональный «второй мозг» прямо в Telegram. Отправляйте в чат с ботом голосовые, файлы, код, фото и ссылки - бэкенд на Go автоматически индексирует их для мгновенного гибридного поиска.
+      </p>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h4>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+            <span>Groq Whisper Turbo</span>
+          </h4>
+          <p>Молниеносная расшифровка голосовых сообщений за миллисекунды с сохранением контекста и таймкодов.</p>
+        </div>
+        <div class="arch-card">
+          <h4>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
+            <span>Qwen Intent + Enrichment</span>
+          </h4>
+          <p>Определяет намерение пользователя, раскладывает по папкам и на лету дописывает описания фильмов, книг и идей.</p>
+        </div>
+        <div class="arch-card">
+          <h4>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>pgvector HNSW (768d)</span>
+          </h4>
+          <p>Google Gemini Embeddings 768d + полнотекстовый поиск PostgreSQL FTS через Reciprocal Rank Fusion (RRF).</p>
+        </div>
+        <div class="arch-card">
+          <h4>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+            <span>Умный архив файлов</span>
+          </h4>
+          <p>Автоматическая классификация .exe, .zip, .pdf, .go, .py, .mp3 и .mp4 с быстрым фильтром по расширениям.</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Примеры команд и сценариев в Telegram</span>
+        <div class="cmd-list">
+          <div class="cmd-item">
+            <span class="cmd-code">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+              <span>Голосовое</span>
+            </span>
+            <span>«Сохрани дораму Мой демон с небольшим описанием, сам найди и сам допиши» - бот расшифрует и добавит сюжет.</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-code">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span>/search &lt;запрос&gt;</span>
+            </span>
+            <span>Гибридный поиск по смыслу и точным совпадениям (например: «корейский сериал про демона»).</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-code">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>/remind завтра 10:00</span>
+            </span>
+            <span>Ставит умное напоминание на любую заметку или голосовую задачу.</span>
+          </div>
+          <div class="cmd-item">
+            <span class="cmd-code">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              <span>Любой файл</span>
+            </span>
+            <span>Просто перешлите .zip, .exe, .pdf или .go файл в @MyAiCloud_Bot - он получит теги и появится здесь.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <div style="display:flex;gap:12px;font-size:12.5px;">
+        <a class="author-link" href="https://t.me/DipasDEV" target="_blank" rel="noopener noreferrer">📢 Канал @DipasDEV</a>
+        <a class="author-link" href="https://t.me/dipas_di" target="_blank" rel="noopener noreferrer">👤 Автор @dipas_di</a>
+      </div>
+      <a class="send-btn" href="https://t.me/MyAiCloud_Bot" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Открыть @MyAiCloud_Bot</a>
+    </div>
+  </dialog>
+
+  <!-- New Folder Modal (Native HTML5 dialog) -->
+  <dialog id="folderDialog" style="width:min(440px, calc(100vw - 28px));" aria-labelledby="folderDialogTitle">
+    <div class="dialog-header">
+      <div class="dialog-title" id="folderDialogTitle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--tg-blue)"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Новая папка</span>
+      </div>
+      <button type="button" class="icon-btn" id="closeFolderDialogBtn" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="field-group">
+        <label class="field-label" for="newFolderNameInput">Название папки</label>
+        <input type="text" id="newFolderNameInput" class="field-input" placeholder="Например: Идеи стартапа">
+      </div>
+      <div class="field-group">
+        <span class="field-label">Иконка папки</span>
+        <div class="icon-picker-row" id="folderIconPicker"></div>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" class="btn-secondary" id="cancelFolderBtn">Отмена</button>
+      <button type="button" class="send-btn" id="confirmFolderBtn">Создать папку</button>
+    </div>
+  </dialog>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ---------- Master SVG Icons Dictionary ---------- */
+      const ICONS = {
+        grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>',
+        mic: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+        folder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+        file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>',
+        photo: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        link: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+        clock: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        briefcase: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+        graduation: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+        film: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+        code: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        sparkle: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>',
+        archive: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>',
+        gear: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        document: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        music: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        video: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+        copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+        external: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>',
+        moon: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+        sun: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+        rocket: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4.5c1.62-1.63 5-2.5 5-2.5"/><path d="M15 12v5s3.03-.55 4.5-2c1.63-1.62 2.5-5 2.5-5"/></svg>',
+        lightbulb: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg>',
+        book: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+        tool: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+        globe: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        diamond: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M11 3L8 9l4 12 4-12-3-6"/><path d="M2 9h20"/></svg>',
+        radar: '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tg-blue)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>'
+      };
+
+      /* ---------- Initial Data ---------- */
+      const INITIAL_FOLDERS = [
+        { id: 'work', name: 'Работа', iconKey: 'briefcase' },
+        { id: 'study', name: 'Учеба', iconKey: 'graduation' },
+        { id: 'movies', name: 'Фильмы', iconKey: 'film' },
+        { id: 'code', name: 'Код', iconKey: 'code' },
+        { id: 'personal', name: 'Личное', iconKey: 'sparkle' }
+      ];
+
+      const QUICK_FILTERS = [
+        { id: 'all', label: 'Все', iconKey: 'grid' },
+        { id: 'voice', label: 'Голосовые', iconKey: 'mic' },
+        { id: 'file', label: 'Файлы', iconKey: 'file' },
+        { id: 'photo', label: 'Фото', iconKey: 'photo' },
+        { id: 'link', label: 'Ссылки', iconKey: 'link' },
+        { id: 'reminder', label: 'Напоминания', iconKey: 'clock' }
+      ];
+
+      const EXT_CATEGORIES = [
+        { id: 'archive', label: 'Архивы', sub: '.zip, .rar', iconKey: 'archive', exts: ['zip', 'rar', '7z'] },
+        { id: 'software', label: 'Программы', sub: '.exe, .apk', iconKey: 'gear', exts: ['exe', 'apk', 'dmg'] },
+        { id: 'document', label: 'Документы', sub: '.pdf, .txt', iconKey: 'document', exts: ['pdf', 'txt', 'docx'] },
+        { id: 'code', label: 'Код', sub: '.py, .go, .sql', iconKey: 'code', exts: ['py', 'go', 'sql', 'js'] },
+        { id: 'music', label: 'Музыка', sub: '.mp3', iconKey: 'music', exts: ['mp3', 'wav', 'ogg'] },
+        { id: 'video', label: 'Видео', sub: '.mp4', iconKey: 'video', exts: ['mp4', 'mov', 'mkv'] }
+      ];
+
+      const FOLDER_ICON_CHOICES = [
+        { key: 'rocket', label: 'Ракета' },
+        { key: 'lightbulb', label: 'Идея' },
+        { key: 'book', label: 'Книга' },
+        { key: 'music', label: 'Музыка' },
+        { key: 'tool', label: 'Инструмент' },
+        { key: 'globe', label: 'Мир' },
+        { key: 'diamond', label: 'Ценное' },
+        { key: 'sparkle', label: 'Особое' }
+      ];
+
+      const INITIAL_NOTES = [
+        {
+          id: 'note-1',
+          type: 'voice',
+          title: 'Дорама «Мой демон» (My Demon)',
+          content: 'Сохрани, посмотри Дораму мой демон с небольшим описанием, сам найди и сам допиши',
+          aiSummary: 'Южнокорейская фэнтези-романтическая дорама (2023-2024). Наследница могущественного чеболя Mirae Group До До Хи заключает фиктивный союз с 200-летним демоном Чон Гу Воном, который случайно потерял свои сверхспособности и теперь вынужден защищать ее, чтобы вернуть силу.',
+          folder: 'movies',
+          createdAt: 'Сегодня, 18:51',
+          durationSec: 9,
+          waveform: [22, 38, 65, 84, 52, 92, 74, 40, 68, 96, 82, 55, 34, 76, 88, 62, 48, 70, 94, 58, 42, 66, 80, 44, 30, 52, 72, 46, 36, 24],
+          tags: ['#дорама', '#фэнтези', '#voice'],
+          semanticKeywords: ['корейские сериалы с демонами', 'дорама', 'мой демон', 'my demon', 'до до хи', 'чон гу вон', 'сериал', 'романтика', 'корея'],
+          bentoWide: true,
+          reminder: ''
+        },
+        {
+          id: 'note-2',
+          type: 'voice',
+          title: 'План релиза AICloud: объединение FTS и pgvector, тест индексов HNSW',
+          content: 'Завтра с утра прогнать бенчмарк гибридного поиска на 100 тысячах записей: сравнить ef_search=64 и 128, проверить веса RRF между pgvector и PostgreSQL FTS.',
+          aiSummary: 'Чек-лист релиза v1.2: 1) Тюнинг параметров HNSW (m=16, ef_construction=64). 2) Валидация RRF-скоринга для коротких и длинных запросов. 3) Деплой обновленного Go-воркера.',
+          folder: 'work',
+          createdAt: 'Сегодня, 11:05',
+          durationSec: 24,
+          waveform: [30, 56, 78, 44, 62, 88, 95, 70, 48, 84, 90, 60, 40, 74, 86, 52, 64, 92, 76, 46, 58, 82, 68, 50, 72, 60, 42, 54, 38, 28],
+          tags: ['#релиз', '#pgvector', '#hnsw'],
+          semanticKeywords: ['pgvector', 'hnsw', 'fts', 'релиз', 'бенчмарк', 'векторный поиск', 'задачи', 'напоминание', 'база данных'],
+          reminder: '2026-11-23T10:00',
+          reminderLabel: 'Завтра, 10:00'
+        },
+        {
+          id: 'note-3',
+          type: 'note',
+          title: 'Фильм «Интерстеллар» (2014)',
+          content: 'Пересмотреть в 4K IMAX на выходных. Невероятный саундтрек Ханса Циммера и визуализация черной дыры Гаргантюа.',
+          aiSummary: 'Научно-фантастический эпос Кристофера Нолана. Когда засуха и пыльные бури ставят человечество на грань вымирания, бывший пилот NASA Купер отправляется через червоточину у Сатурна в поисках новой пригодной для жизни планеты.',
+          folder: 'movies',
+          createdAt: 'Вчера, 21:40',
+          tags: ['#кино', '#scifi', '#нолан'],
+          semanticKeywords: ['интерстеллар', 'космос', 'черная дыра', 'нолан', 'фильм', 'фантастика', 'кино', 'время'],
+          reminder: ''
+        },
+        {
+          id: 'note-4',
+          type: 'file',
+          fileCategory: 'software',
+          ext: 'exe',
+          fileName: 'AICloud_Setup_v1.2.exe',
+          fileSize: '48 МБ',
+          fileIconKey: 'gear',
+          title: 'AICloud_Setup_v1.2.exe',
+          content: 'Десктопный клиент-синхронизатор AICloud для Windows (сборка v1.2, автозапуск в трее и быстрый захват скриншотов).',
+          aiSummary: 'Исполняемый установщик Windows x64. Категория: Программы (software). Контрольная сумма проверена ботом при загрузке.',
+          folder: 'work',
+          createdAt: 'Вчера, 18:15',
+          tags: ['#software', '#exe', '#windows'],
+          semanticKeywords: ['exe', 'программа', 'установщик', 'windows', 'setup', 'клиент', 'aicloud'],
+          reminder: ''
+        },
+        {
+          id: 'note-5',
+          type: 'file',
+          fileCategory: 'archive',
+          ext: 'zip',
+          fileName: 'AICloud_Source_Code.zip',
+          fileSize: '14.8 МБ',
+          fileIconKey: 'archive',
+          title: 'AICloud_Source_Code.zip',
+          content: 'Резервный архив исходников Go-бэкенда, миграций PostgreSQL pgvector и Docker Compose конфигурации.',
+          aiSummary: 'ZIP-архив (14.8 МБ). Внутри: /cmd/bot, /internal/search, /migrations/004_hnsw_index.sql, docker-compose.yml.',
+          folder: 'code',
+          createdAt: '20 ноя, 16:30',
+          tags: ['#archive', '#zip', '#backup'],
+          semanticKeywords: ['zip', 'архив', 'исходники', 'бэкап', 'код', 'docker', 'go'],
+          reminder: ''
+        },
+        {
+          id: 'note-6',
+          type: 'file',
+          fileCategory: 'document',
+          ext: 'pdf',
+          fileName: 'Postgres_pgvector_Architecture.pdf',
+          fileSize: '3.2 МБ',
+          fileIconKey: 'document',
+          title: 'Postgres_pgvector_Architecture.pdf',
+          content: 'Архитектурный разбор индексов HNSW и IVFFlat в PostgreSQL, расчет памяти под 768-мерные векторы Gemini.',
+          aiSummary: 'Технический PDF-документ (3.2 МБ). Ключевой вывод: HNSW с косинусной метрикой vector_cosine_ops дает <12 мс на 500k записей при 98% recall.',
+          folder: 'study',
+          createdAt: '19 ноя, 13:12',
+          tags: ['#pdf', '#pgvector', '#postgres'],
+          semanticKeywords: ['pdf', 'документ', 'pgvector', 'postgresql', 'hnsw', 'архитектура', 'индексы', 'база данных'],
+          reminder: ''
+        },
+        {
+          id: 'note-7',
+          type: 'code',
+          fileCategory: 'code',
+          ext: 'go',
+          fileName: 'hybrid_search.go',
+          fileSize: '4.6 КБ',
+          fileIconKey: 'code',
+          title: 'hybrid_search.go',
+          content: 'Гибридный поиск RRF на Go + PostgreSQL pgvector (Gemini 768d embeddings + tsvector).',
+          codeSnippet: '// HybridSearch combines pgvector HNSW + PostgreSQL FTS via RRF\nfunc (r *Repo) HybridSearch(ctx context.Context, query string, vec []float32) ([]Note, error) {\n    const sqlQuery = `\n        WITH semantic AS (\n            SELECT id, ROW_NUMBER() OVER (ORDER BY embedding <=> $1) AS rank\n            FROM notes ORDER BY embedding <=> $1 LIMIT 20\n        ), fulltext AS (\n            SELECT id, ROW_NUMBER() OVER (ORDER BY ts_rank(tsv, plainto_tsquery(\'russian\', $2)) DESC) AS rank\n            FROM notes WHERE tsv @@ plainto_tsquery(\'russian\', $2) LIMIT 20\n        )\n        SELECT n.id, n.title,\n               COALESCE(1.0 / (60 + s.rank), 0) + COALESCE(1.0 / (60 + f.rank), 0) AS rrf_score\n        FROM notes n\n        LEFT JOIN semantic s ON n.id = s.id\n        LEFT JOIN fulltext f ON n.id = f.id\n        WHERE s.id IS NOT NULL OR f.id IS NOT NULL\n        ORDER BY rrf_score DESC LIMIT 12;`\n    return r.queryNotes(ctx, sqlQuery, pgvector.NewVector(vec), query)\n}',
+          aiSummary: 'Функция объединяет векторное косинусное расстояние (<=>) и полнотекстовый рейтинг ts_rank с константой сглаживания k=60.',
+          folder: 'code',
+          createdAt: '18 ноя, 22:08',
+          tags: ['#go', '#sql', '#pgvector'],
+          semanticKeywords: ['pgvector', 'hybrid_search', 'go', 'golang', 'sql', 'rrf', 'код', 'поиск', 'векторы', 'embeddings'],
+          bentoWide: true,
+          reminder: ''
+        },
+        {
+          id: 'note-8',
+          type: 'link',
+          title: 'Документация Gemini Embeddings API',
+          url: 'https://ai.google.dev/gemini-api/docs/embeddings',
+          domain: 'ai.google.dev',
+          content: 'Официальное руководство по модели text-embedding-004 (768 измерений), задачам RETRIEVAL_DOCUMENT и RETRIEVAL_QUERY.',
+          aiSummary: 'Поддерживает гибкую размерность (Matryoshka Representation Learning), оптимизировано под семантический поиск и кластеризацию.',
+          folder: 'study',
+          createdAt: '17 ноя, 19:50',
+          tags: ['#gemini', '#api', '#embeddings'],
+          semanticKeywords: ['gemini', 'embeddings', 'api', 'ссылка', 'документация', 'google', 'pgvector', 'векторы'],
+          reminder: ''
+        },
+        {
+          id: 'note-9',
+          type: 'photo',
+          title: 'Схема пайплайна AICloud (Telegram -> Go -> pgvector)',
+          content: 'Визуальная схема обработки входящих сообщений от пользователя до ответа в веб-дашборде.',
+          aiSummary: 'Распознано на изображении: 4 узла (Telegram Bot API, Groq Whisper Turbo, Qwen Enrichment, PostgreSQL + pgvector HNSW).',
+          folder: 'personal',
+          createdAt: '16 ноя, 15:10',
+          tags: ['#схема', '#фото', '#архитектура'],
+          semanticKeywords: ['фото', 'схема', 'архитектура', 'пайплайн', 'pgvector', 'whisper', 'qwen'],
+          reminder: ''
+        }
+      ];
+
+      /* ---------- App State ---------- */
+      let state = {
+        notes: INITIAL_NOTES.map(n => Object.assign({}, n)),
+        folders: INITIAL_FOLDERS.map(f => Object.assign({}, f)),
+        activeQuickFilter: 'all',
+        activeFolder: null,
+        activeExtCategory: null,
+        searchQuery: '',
+        searchMode: 'hybrid',
+        viewMode: 'bento',
+        theme: 'light',
+        sidebarCollapsed: false,
+        editingNoteId: null,
+        attachedFile: null,
+        isRecording: false,
+        recSeconds: 0,
+        recTranscript: '',
+        selectedFolderIconKey: 'rocket'
+      };
+
+      /* Voice Playback State */
+      const playback = {
+        activeId: null,
+        currentTime: 0,
+        speed: 1,
+        intervalId: null
+      };
+
+      const speeds = [1, 1.5, 2];
+      let recIntervalId = null;
+
+      /* ---------- DOM Elements ---------- */
+      const sidebar = document.getElementById('sidebar');
+      const mobileOverlay = document.getElementById('mobileOverlay');
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+      const quickFiltersList = document.getElementById('quickFiltersList');
+      const foldersList = document.getElementById('foldersList');
+      const extGrid = document.getElementById('extGrid');
+      const notesGrid = document.getElementById('notesGrid');
+      const feedHeading = document.getElementById('feedHeading');
+      const feedCountBadge = document.getElementById('feedCountBadge');
+      const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+
+      const searchInput = document.getElementById('searchInput');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const viewBentoBtn = document.getElementById('viewBentoBtn');
+      const viewListBtn = document.getElementById('viewListBtn');
+
+      const composerDropZone = document.getElementById('composerDropZone');
+      const composerInput = document.getElementById('composerInput');
+      const composerFolderSelect = document.getElementById('composerFolderSelect');
+      const recordVoiceBtn = document.getElementById('recordVoiceBtn');
+      const recordBtnLabel = document.getElementById('recordBtnLabel');
+      const recordingBanner = document.getElementById('recordingBanner');
+      const recStreamText = document.getElementById('recStreamText');
+      const recTimer = document.getElementById('recTimer');
+      const attachFileBtn = document.getElementById('attachFileBtn');
+      const fileInputHidden = document.getElementById('fileInputHidden');
+      const attachedFilePill = document.getElementById('attachedFilePill');
+      const attachedFileIcon = document.getElementById('attachedFileIcon');
+      const attachedFileName = document.getElementById('attachedFileName');
+      const attachedFileSize = document.getElementById('attachedFileSize');
+      const removeAttachedBtn = document.getElementById('removeAttachedBtn');
+      const aiAutoEnrichToggle = document.getElementById('aiAutoEnrichToggle');
+      const saveNoteBtn = document.getElementById('saveNoteBtn');
+
+      const noteDialog = document.getElementById('noteDialog');
+      const closeNoteDialogBtn = document.getElementById('closeNoteDialogBtn');
+      const editNoteTitle = document.getElementById('editNoteTitle');
+      const editNoteContent = document.getElementById('editNoteContent');
+      const editNoteAi = document.getElementById('editNoteAi');
+      const editNoteFolder = document.getElementById('editNoteFolder');
+      const editNoteReminder = document.getElementById('editNoteReminder');
+      const modalMediaSlot = document.getElementById('modalMediaSlot');
+      const modalEnrichBtn = document.getElementById('modalEnrichBtn');
+      const saveModalNoteBtn = document.getElementById('saveModalNoteBtn');
+      const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+
+      const helpDialog = document.getElementById('helpDialog');
+      const openHelpBtn = document.getElementById('openHelpBtn');
+      const closeHelpDialogBtn = document.getElementById('closeHelpDialogBtn');
+
+      const folderDialog = document.getElementById('folderDialog');
+      const openNewFolderBtn = document.getElementById('openNewFolderBtn');
+      const closeFolderDialogBtn = document.getElementById('closeFolderDialogBtn');
+      const cancelFolderBtn = document.getElementById('cancelFolderBtn');
+      const confirmFolderBtn = document.getElementById('confirmFolderBtn');
+      const newFolderNameInput = document.getElementById('newFolderNameInput');
+      const folderIconPicker = document.getElementById('folderIconPicker');
+      const toastContainer = document.getElementById('toastContainer');
+
+      /* ---------- Helper Functions ---------- */
+      function getIcon(key) {
+        return ICONS[key] || ICONS.folder;
+      }
+
+      function showToast(message, iconSvg) {
+        const el = document.createElement('div');
+        el.className = 'toast';
+        if (iconSvg) {
+          el.innerHTML = '<span class="svg-icon" style="width:16px;height:16px;color:var(--tg-blue);">' + iconSvg + '</span><span>' + escapeHtml(message) + '</span>';
+        } else {
+          el.textContent = message;
+        }
+        toastContainer.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(8px)';
+          el.style.transition = 'all 0.25s ease';
+          setTimeout(() => el.remove(), 260);
+        }, 2800);
+      }
+
+      function escapeHtml(str) {
+        return String(str || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function formatTime(sec) {
+        const s = Math.max(0, Math.floor(sec));
+        const m = Math.floor(s / 60);
+        const rem = s % 60;
+        return m + ':' + (rem < 10 ? '0' : '') + rem;
+      }
+
+      function pluralNotes(n) {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return n + ' запись';
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return n + ' записи';
+        return n + ' записей';
+      }
+
+      function highlightGoSql(code) {
+        let html = escapeHtml(code);
+        html = html.replace(/(\/\/[^\n]*)/g, '<span class="tok-com">$1</span>');
+        html = html.replace(/('[^']*')/g, '<span class="tok-str">$1</span>');
+        html = html.replace(/\b(func|const|return|var|type|struct|error|if|else)\b/g, '<span class="tok-kw">$1</span>');
+        html = html.replace(/\b(WITH|SELECT|FROM|WHERE|ORDER BY|LIMIT|LEFT JOIN|ON|AS|IS NOT NULL|OR|DESC|OVER|COALESCE|ROW_NUMBER)\b/g, '<span class="tok-sql">$1</span>');
+        html = html.replace(/\b(HybridSearch|NewVector|queryNotes|plainto_tsquery|ts_rank)\b/g, '<span class="tok-fn">$1</span>');
+        html = html.replace(/\b(60|20|12|1\.0)\b/g, '<span class="tok-num">$1</span>');
+        return html;
+      }
+
+      function getFolderById(id) {
+        return state.folders.find(f => f.id === id) || state.folders[0];
+      }
+
+      function detectFileCategory(filename) {
+        const ext = (filename.split('.').pop() || '').toLowerCase();
+        for (const cat of EXT_CATEGORIES) {
+          if (cat.exts.includes(ext)) {
+            return { category: cat.id, iconKey: cat.iconKey, ext: ext };
+          }
+        }
+        return { category: 'document', iconKey: 'document', ext: ext || 'file' };
+      }
+
+      function formatBytes(bytes) {
+        if (!bytes || bytes < 1024) return (bytes || 512) + ' Б';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' КБ';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' МБ';
+      }
+
+      function copyText(text, label) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast(label || 'Скопировано в буфер', ICONS.copy)).catch(() => fallbackCopy(text, label));
+        } else {
+          fallbackCopy(text, label);
+        }
+      }
+
+      function fallbackCopy(text, label) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast(label || 'Скопировано в буфер', ICONS.copy);
+        } catch (e) {
+          showToast('Не удалось скопировать');
+        }
+        ta.remove();
+      }
+
+      /* ---------- Theme Persistence ---------- */
+      function initTheme() {
+        let saved = 'light';
+        try {
+          const v = localStorage.getItem('aicloud_theme');
+          if (v === 'light' || v === 'dark') saved = v;
+        } catch (e) {}
+        applyTheme(saved);
+      }
+
+      function applyTheme(theme) {
+        state.theme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        themeToggleBtn.innerHTML = theme === 'dark' ? ICONS.sun : ICONS.moon;
+        themeToggleBtn.title = theme === 'dark' ? 'Включить светлую тему (Telegram Day)' : 'Включить темную тему (Telegram Night)';
+        try {
+          localStorage.setItem('aicloud_theme', theme);
+        } catch (e) {}
+      }
+
+      /* ---------- Search & Semantic Scoring ---------- */
+      function computeMatchScore(note, query, mode) {
+        const q = query.trim().toLowerCase();
+        if (!q) return null;
+
+        const haystack = [
+          note.title,
+          note.content,
+          note.aiSummary || '',
+          note.fileName || '',
+          note.ext || '',
+          note.domain || '',
+          (note.tags || []).join(' ')
+        ].join(' ').toLowerCase();
+
+        const exactDirect = haystack.includes(q);
+        const tokens = q.split(/\s+/).filter(t => t.length > 1);
+
+        if (mode === 'exact') {
+          return exactDirect ? 100 : 0;
+        }
+
+        let score = 0;
+        if (exactDirect) {
+          score = Math.max(score, 96);
+        }
+
+        const kwList = (note.semanticKeywords || []).map(k => k.toLowerCase());
+        for (const kw of kwList) {
+          if (q.includes(kw) || kw.includes(q)) {
+            score = Math.max(score, 98);
+          }
+        }
+
+        if (tokens.length > 0) {
+          let hits = 0;
+          for (const t of tokens) {
+            const stem = t.length > 4 ? t.slice(0, -2) : t;
+            if (haystack.includes(t) || kwList.some(k => k.includes(stem))) {
+              hits++;
+            }
+          }
+          if (hits > 0) {
+            const ratio = hits / tokens.length;
+            const computed = Math.round(72 + ratio * 25);
+            score = Math.max(score, Math.min(98, computed));
+          }
+        }
+
+        if (mode === 'semantic' && score > 0) {
+          score = Math.min(99, score + 1);
+        }
+
+        return score >= 74 ? score : 0;
+      }
+
+      function getFilteredNotes() {
+        const q = state.searchQuery.trim();
+        let list = state.notes.map(note => {
+          const matchScore = q ? computeMatchScore(note, q, state.searchMode) : null;
+          return { note, matchScore };
+        });
+
+        if (q) {
+          list = list.filter(item => item.matchScore && item.matchScore > 0);
+        }
+
+        if (state.activeQuickFilter !== 'all') {
+          list = list.filter(({ note }) => {
+            if (state.activeQuickFilter === 'voice') return note.type === 'voice';
+            if (state.activeQuickFilter === 'file') return note.type === 'file' || note.type === 'code';
+            if (state.activeQuickFilter === 'photo') return note.type === 'photo';
+            if (state.activeQuickFilter === 'link') return note.type === 'link';
+            if (state.activeQuickFilter === 'reminder') return Boolean(note.reminder);
+            return true;
+          });
+        }
+
+        if (state.activeFolder) {
+          list = list.filter(({ note }) => note.folder === state.activeFolder);
+        }
+
+        if (state.activeExtCategory) {
+          list = list.filter(({ note }) => note.fileCategory === state.activeExtCategory);
+        }
+
+        if (q) {
+          list.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+        }
+
+        return list;
+      }
+
+      /* ---------- Voice Playback Engine ---------- */
+      function stopPlayback() {
+        if (playback.intervalId) {
+          clearInterval(playback.intervalId);
+          playback.intervalId = null;
+        }
+        playback.activeId = null;
+        playback.currentTime = 0;
+      }
+
+      function toggleVoicePlay(noteId) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        if (playback.activeId === noteId && playback.intervalId) {
+          clearInterval(playback.intervalId);
+          playback.intervalId = null;
+          updateVoiceUI(noteId);
+          return;
+        }
+
+        if (playback.activeId && playback.activeId !== noteId) {
+          const prevId = playback.activeId;
+          stopPlayback();
+          updateVoiceUI(prevId);
+        }
+
+        playback.activeId = noteId;
+        if (playback.currentTime >= note.durationSec) {
+          playback.currentTime = 0;
+        }
+
+        playback.intervalId = setInterval(() => {
+          playback.currentTime += 0.1 * playback.speed;
+          if (playback.currentTime >= note.durationSec) {
+            playback.currentTime = 0;
+            clearInterval(playback.intervalId);
+            playback.intervalId = null;
+            playback.activeId = null;
+          }
+          updateVoiceUI(noteId);
+        }, 100);
+
+        updateVoiceUI(noteId);
+      }
+
+      function seekVoice(noteId, ratio) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (!note) return;
+        if (playback.activeId !== noteId) {
+          if (playback.activeId) {
+            const prevId = playback.activeId;
+            stopPlayback();
+            updateVoiceUI(prevId);
+          }
+          playback.activeId = noteId;
+        }
+        playback.currentTime = Math.max(0, Math.min(note.durationSec, note.durationSec * ratio));
+        updateVoiceUI(noteId);
+      }
+
+      function cycleVoiceSpeed(noteId) {
+        const idx = speeds.indexOf(playback.speed);
+        playback.speed = speeds[(idx + 1) % speeds.length];
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+          btn.textContent = playback.speed + 'x';
+        });
+        updateVoiceUI(noteId);
+      }
+
+      function updateVoiceUI(noteId) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (!note) return;
+        const isPlaying = playback.activeId === noteId && Boolean(playback.intervalId);
+        const cur = playback.activeId === noteId ? playback.currentTime : 0;
+        const progress = note.durationSec > 0 ? cur / note.durationSec : 0;
+
+        document.querySelectorAll('[data-voice-player="' + noteId + '"]').forEach(player => {
+          const btn = player.querySelector('.play-btn');
+          const timer = player.querySelector('.voice-time-readout');
+          const bars = player.querySelectorAll('.wave-bar');
+          if (btn) {
+            btn.innerHTML = isPlaying
+              ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
+              : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+          }
+          if (timer) {
+            timer.textContent = (cur > 0 ? formatTime(cur) + ' / ' : '') + formatTime(note.durationSec);
+          }
+          const playedCount = Math.round(progress * bars.length);
+          bars.forEach((bar, i) => {
+            bar.classList.toggle('played', i < playedCount);
+          });
+        });
+      }
+
+      function renderVoicePlayerHtml(note) {
+        const isPlaying = playback.activeId === note.id && Boolean(playback.intervalId);
+        const cur = playback.activeId === note.id ? playback.currentTime : 0;
+        const progress = note.durationSec > 0 ? cur / note.durationSec : 0;
+        const rawBars = note.waveform || [30, 50, 75, 45, 85, 60, 40, 70, 90, 55, 35, 65, 80, 50, 40, 60, 75, 45, 30, 55];
+        const targetCount = note.bentoWide ? 54 : 34;
+        const bars = Array.from({ length: targetCount }, (_, i) => {
+          const pos = (i / targetCount) * rawBars.length;
+          return rawBars[Math.floor(pos) % rawBars.length];
+        });
+        const playedCount = Math.round(progress * bars.length);
+
+        const barsHtml = bars.map((h, i) =>
+          '<span class="wave-bar' + (i < playedCount ? ' played' : '') + '" data-bar-idx="' + i + '" style="height:' + Math.max(18, h) + '%"></span>'
+        ).join('');
+
+        return `
+          <div class="voice-player" data-voice-player="${note.id}" data-stop-card="true">
+            <button type="button" class="play-btn" data-action="play-voice" data-id="${note.id}" aria-label="Воспроизвести голосовое">
+              ${isPlaying
+                ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>'
+                : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>'}
+            </button>
+            <div class="voice-body">
+              <div class="waveform" data-action="seek-voice" data-id="${note.id}" title="Нажмите для перемотки">
+                ${barsHtml}
+              </div>
+              <div class="voice-meta">
+                <span class="voice-time-readout">${cur > 0 ? formatTime(cur) + ' / ' : ''}${formatTime(note.durationSec)}</span>
+                <button type="button" class="speed-btn" data-action="speed-voice" data-id="${note.id}">${playback.speed}x</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderPhotoSvgHtml() {
+        return `
+          <div class="photo-frame">
+            <svg viewBox="0 0 560 150" width="100%" style="display:block;">
+              <defs>
+                <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#2AABEE"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+              <rect width="560" height="150" fill="#0b1222"/>
+              <rect x="20" y="45" width="104" height="58" rx="12" fill="rgba(42,171,238,0.18)" stroke="#2AABEE" stroke-width="1.5"/>
+              <text x="72" y="70" fill="#f1f5f9" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="700">Telegram</text>
+              <text x="72" y="88" fill="#94a3b8" font-size="9.5" font-family="sans-serif" text-anchor="middle">@MyAiCloud_Bot</text>
+              <line x1="124" y1="74" x2="156" y2="74" stroke="#2AABEE" stroke-width="2"/>
+              <rect x="156" y="45" width="114" height="58" rx="12" fill="rgba(99,102,241,0.18)" stroke="#818cf8" stroke-width="1.5"/>
+              <text x="213" y="70" fill="#f1f5f9" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="700">Go + Whisper</text>
+              <text x="213" y="88" fill="#94a3b8" font-size="9.5" font-family="sans-serif" text-anchor="middle">Groq Turbo STT</text>
+              <line x1="270" y1="74" x2="302" y2="74" stroke="#818cf8" stroke-width="2"/>
+              <rect x="302" y="45" width="108" height="58" rx="12" fill="rgba(168,85,247,0.18)" stroke="#a855f7" stroke-width="1.5"/>
+              <text x="356" y="70" fill="#f1f5f9" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="700">Qwen AI</text>
+              <text x="356" y="88" fill="#94a3b8" font-size="9.5" font-family="sans-serif" text-anchor="middle">Intent + Summary</text>
+              <line x1="410" y1="74" x2="438" y2="74" stroke="#a855f7" stroke-width="2"/>
+              <rect x="438" y="45" width="104" height="58" rx="12" fill="url(#g1)" opacity="0.9"/>
+              <text x="490" y="70" fill="#ffffff" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="700">pgvector</text>
+              <text x="490" y="88" fill="#e0f2fe" font-size="9.5" font-family="sans-serif" text-anchor="middle">HNSW 768d RRF</text>
+            </svg>
+          </div>
+        `;
+      }
+
+      /* ---------- Render Sidebar ---------- */
+      function renderSidebar() {
+        const counts = {
+          all: state.notes.length,
+          voice: state.notes.filter(n => n.type === 'voice').length,
+          file: state.notes.filter(n => n.type === 'file' || n.type === 'code').length,
+          photo: state.notes.filter(n => n.type === 'photo').length,
+          link: state.notes.filter(n => n.type === 'link').length,
+          reminder: state.notes.filter(n => Boolean(n.reminder)).length
+        };
+
+        quickFiltersList.innerHTML = QUICK_FILTERS.map(f => {
+          const active = state.activeQuickFilter === f.id && !state.activeFolder && !state.activeExtCategory;
+          return `
+            <button type="button" class="nav-item${active ? ' active' : ''}" data-quick-filter="${f.id}" title="${f.label}">
+              <span class="nav-left">
+                <span class="nav-icon">${getIcon(f.iconKey)}</span>
+                <span class="nav-label hide-on-collapse">${f.label}</span>
+              </span>
+              <span class="nav-count hide-on-collapse">${counts[f.id]}</span>
+            </button>
+          `;
+        }).join('');
+
+        foldersList.innerHTML = state.folders.map(f => {
+          const count = state.notes.filter(n => n.folder === f.id).length;
+          const active = state.activeFolder === f.id;
+          return `
+            <button type="button" class="nav-item${active ? ' active' : ''}" data-folder-filter="${f.id}" title="${escapeHtml(f.name)}">
+              <span class="nav-left">
+                <span class="nav-icon">${getIcon(f.iconKey)}</span>
+                <span class="nav-label hide-on-collapse">${escapeHtml(f.name)}</span>
+              </span>
+              <span class="nav-count hide-on-collapse">${count}</span>
+            </button>
+          `;
+        }).join('');
+
+        extGrid.innerHTML = EXT_CATEGORIES.map(cat => {
+          const active = state.activeExtCategory === cat.id;
+          return `
+            <button type="button" class="ext-pill${active ? ' active' : ''}" data-ext-cat="${cat.id}" title="${cat.label} (${cat.sub})">
+              <span class="nav-icon">${getIcon(cat.iconKey)}</span>
+              <span class="hide-on-collapse">
+                <span style="display:block;font-weight:600;line-height:1.2;">${cat.label}</span>
+                <span class="ext-sub">${cat.sub}</span>
+              </span>
+            </button>
+          `;
+        }).join('');
+
+        const folderOptions = state.folders.map(f =>
+          `<option value="${f.id}">${escapeHtml(f.name)}</option>`
+        ).join('');
+        const prevComposerVal = composerFolderSelect.value || 'personal';
+        composerFolderSelect.innerHTML = folderOptions;
+        composerFolderSelect.value = state.folders.some(f => f.id === prevComposerVal) ? prevComposerVal : state.folders[0].id;
+        editNoteFolder.innerHTML = folderOptions;
+      }
+
+      /* ---------- Render Notes Grid ---------- */
+      function renderNotes() {
+        const items = getFilteredNotes();
+
+        let title = 'Все записи';
+        if (state.activeFolder) {
+          const f = getFolderById(state.activeFolder);
+          title = 'Папка: ' + f.name;
+        } else if (state.activeExtCategory) {
+          const c = EXT_CATEGORIES.find(x => x.id === state.activeExtCategory);
+          title = (c ? c.label : 'Файлы');
+        } else if (state.activeQuickFilter !== 'all') {
+          const qf = QUICK_FILTERS.find(x => x.id === state.activeQuickFilter);
+          title = qf ? qf.label : 'Записи';
+        }
+        if (state.searchQuery.trim()) {
+          title = 'Результаты поиска: «' + state.searchQuery.trim() + '»';
+        }
+
+        feedHeading.textContent = title;
+        feedCountBadge.textContent = pluralNotes(items.length);
+
+        const hasFilter = state.activeQuickFilter !== 'all' || state.activeFolder || state.activeExtCategory || state.searchQuery.trim();
+        resetFiltersBtn.classList.toggle('visible', Boolean(hasFilter));
+
+        notesGrid.classList.toggle('list-view', state.viewMode === 'list');
+
+        if (items.length === 0) {
+          notesGrid.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">${ICONS.radar}</div>
+              <h3 style="margin-bottom:6px;font-size:16px;">Ничего не найдено</h3>
+              <p style="color:var(--text-secondary);font-size:13.5px;margin-bottom:14px;">Попробуйте переключить режим на «Гибридный» или «По смыслу / AI», либо сбросьте фильтры.</p>
+              <button type="button" class="send-btn" id="emptyResetBtn">Показать все записи</button>
+            </div>
+          `;
+          const emptyBtn = document.getElementById('emptyResetBtn');
+          if (emptyBtn) emptyBtn.addEventListener('click', resetAllFilters);
+          return;
+        }
+
+        notesGrid.innerHTML = items.map(({ note, matchScore }, index) => {
+          const folder = getFolderById(note.folder);
+
+          let badgeIconSvg = ICONS.file;
+          let badgeLabel = 'Заметка';
+          if (note.type === 'voice') {
+            badgeIconSvg = ICONS.mic;
+            badgeLabel = 'Голосовое';
+          } else if (note.type === 'file') {
+            badgeIconSvg = getIcon(note.fileIconKey || 'file');
+            badgeLabel = 'Файл';
+          } else if (note.type === 'code') {
+            badgeIconSvg = ICONS.code;
+            badgeLabel = 'Код';
+          } else if (note.type === 'link') {
+            badgeIconSvg = ICONS.link;
+            badgeLabel = 'Ссылка';
+          } else if (note.type === 'photo') {
+            badgeIconSvg = ICONS.photo;
+            badgeLabel = 'Фото';
+          }
+
+          let mediaHtml = '';
+          if (note.type === 'voice') {
+            mediaHtml = renderVoicePlayerHtml(note);
+          } else if (note.type === 'file') {
+            mediaHtml = `
+              <div class="file-box">
+                <div class="file-icon-box">${getIcon(note.fileIconKey || 'file')}</div>
+                <div class="file-info">
+                  <div class="file-name">${escapeHtml(note.fileName)}</div>
+                  <div class="file-meta">
+                    <span class="ext-tag">.${escapeHtml(note.ext)}</span>
+                    <span>${escapeHtml(note.fileSize)}</span>
+                    <span>• ${escapeHtml(note.fileCategory || 'file')}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else if (note.type === 'code') {
+            mediaHtml = `
+              <div class="code-preview" data-stop-card="true">
+                <div class="code-topbar">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="code-dots"><span style="background:#ef4444"></span><span style="background:#f59e0b"></span><span style="background:#22c55e"></span></span>
+                    <span>${escapeHtml(note.fileName)}</span>
+                  </div>
+                  <button type="button" class="mini-action" data-action="copy-code" data-id="${note.id}" title="Копировать код" style="width:auto;padding:2px 8px;font-size:11px;display:inline-flex;gap:4px;">
+                    ${ICONS.copy}
+                    <span>Копировать</span>
+                  </button>
+                </div>
+                <pre class="code-content">${highlightGoSql(note.codeSnippet || '')}</pre>
+              </div>
+            `;
+          } else if (note.type === 'link') {
+            mediaHtml = `
+              <div class="link-preview" data-stop-card="true">
+                <div class="link-domain">
+                  ${ICONS.link}
+                  <span>${escapeHtml(note.domain || 'link')}</span>
+                </div>
+                <a href="${escapeHtml(note.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text-primary);font-size:12.5px;text-decoration:none;word-break:break-all;">${escapeHtml(note.url)}</a>
+              </div>
+            `;
+          } else if (note.type === 'photo') {
+            mediaHtml = renderPhotoSvgHtml();
+          }
+
+          const aiBlock = note.aiSummary ? `
+            <div class="ai-enrichment">
+              <div class="ai-enrichment-header">
+                <span class="svg-icon" style="width:13px;height:13px;">${ICONS.sparkle}</span>
+                <span>Сгенерировано ИИ (Enrichment)</span>
+              </div>
+              <div class="ai-enrichment-text">${escapeHtml(note.aiSummary)}</div>
+            </div>
+          ` : '';
+
+          const reminderBadge = note.reminder ? `
+            <span class="reminder-badge">
+              ${ICONS.clock}
+              <span>${escapeHtml(note.reminderLabel || note.reminder.replace('T', ' '))}</span>
+            </span>
+          ` : '';
+
+          const matchBadge = matchScore ? `
+            <span class="match-badge">
+              ${ICONS.sparkle}
+              <span>${matchScore}% совпадение</span>
+            </span>
+          ` : '';
+
+          return `
+            <article class="note-card${note.bentoWide ? ' bento-wide' : ''}" data-note-id="${note.id}" style="animation-delay:${Math.min(index * 0.04, 0.28)}s">
+              <div class="card-header">
+                <div class="card-badges">
+                  <span class="type-badge">${badgeIconSvg} <span>${badgeLabel}</span></span>
+                  <span class="folder-badge">${getIcon(folder.iconKey)} <span>${escapeHtml(folder.name)}</span></span>
+                  ${reminderBadge}
+                  ${matchBadge}
+                </div>
+                <div class="card-quick-actions" data-stop-card="true">
+                  <button type="button" class="mini-action" data-action="copy-note" data-id="${note.id}" title="Копировать текст">${ICONS.copy}</button>
+                  <button type="button" class="mini-action" data-action="open-note" data-id="${note.id}" title="Открыть и редактировать">${ICONS.external}</button>
+                </div>
+              </div>
+
+              <h2 class="card-title">${escapeHtml(note.title)}</h2>
+              ${mediaHtml}
+              <p class="card-text">${escapeHtml(note.content)}</p>
+              ${aiBlock}
+
+              <div class="card-footer">
+                <div class="tags-list">
+                  ${(note.tags || []).map(t => `<span class="tag-item">${escapeHtml(t)}</span>`).join('')}
+                </div>
+                <span>${escapeHtml(note.createdAt)}</span>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      /* ---------- Modal Logic ---------- */
+      function setupDialogLightDismiss(dialogEl) {
+        dialogEl.addEventListener('click', (e) => {
+          if (e.target === dialogEl) {
+            dialogEl.close();
+          }
+        });
+      }
+
+      function openNoteModal(noteId) {
+        const note = state.notes.find(n => n.id === noteId);
+        if (!note) return;
+        state.editingNoteId = noteId;
+
+        editNoteTitle.value = note.title;
+        editNoteContent.value = note.content;
+        editNoteAi.value = note.aiSummary || '';
+        editNoteFolder.value = note.folder;
+        editNoteReminder.value = note.reminder || '';
+
+        if (note.type === 'voice') {
+          modalMediaSlot.innerHTML = renderVoicePlayerHtml(note);
+        } else if (note.type === 'file') {
+          modalMediaSlot.innerHTML = `
+            <div class="file-box">
+              <div class="file-icon-box">${getIcon(note.fileIconKey || 'file')}</div>
+              <div class="file-info">
+                <div class="file-name">${escapeHtml(note.fileName)}</div>
+                <div class="file-meta"><span class="ext-tag">.${escapeHtml(note.ext)}</span><span>${escapeHtml(note.fileSize)}</span></div>
+              </div>
+            </div>
+          `;
+        } else if (note.type === 'code') {
+          modalMediaSlot.innerHTML = `
+            <div class="code-preview">
+              <div class="code-topbar"><span>${escapeHtml(note.fileName)}</span></div>
+              <pre class="code-content">${highlightGoSql(note.codeSnippet || '')}</pre>
+            </div>
+          `;
+        } else if (note.type === 'link') {
+          modalMediaSlot.innerHTML = `
+            <div class="link-preview">
+              <div class="link-domain">${ICONS.link} <span>${escapeHtml(note.domain)}</span></div>
+              <a href="${escapeHtml(note.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--tg-blue);font-size:13px;">${escapeHtml(note.url)}</a>
+            </div>
+          `;
+        } else if (note.type === 'photo') {
+          modalMediaSlot.innerHTML = renderPhotoSvgHtml();
+        } else {
+          modalMediaSlot.innerHTML = '';
+        }
+
+        noteDialog.showModal();
+      }
+
+      function generateAiEnrichmentText(title, content, type) {
+        const combined = (title + ' ' + content).toLowerCase();
+        if (combined.includes('демон')) {
+          return 'Дополнено Qwen + Gemini: рейтинг дорамы «Мой демон» на IMDb 7.7/10, 16 серий по 65 минут. В главных ролях Ким Ю Чжон и Сон Кан. Рекомендовано к просмотру вечером.';
+        }
+        if (combined.includes('pgvector') || combined.includes('hnsw') || combined.includes('поиск')) {
+          return 'Дополнено Qwen: индекс HNSW обеспечивает логарифмическое время поиска ближайших соседей. Для 768d эмбеддингов Gemini рекомендуется использовать halfvec или cosine distance (<=>) с RRF k=60.';
+        }
+        if (type === 'file') {
+          return 'Дополнено ИИ: файл проиндексирован по метаданным и расширению. Доступен для мгновенного поиска по имени и категории в @MyAiCloud_Bot.';
+        }
+        return 'Краткое саммари ИИ (Qwen): ключевая мысль извлечена, присвоены семантические теги и создан 768-мерный вектор Google Gemini для быстрого поиска по смыслу.';
+      }
+
+      /* ---------- Composer & Voice Recording Simulation ---------- */
+      const DEMO_VOICE_PHRASES = [
+        'Сохрани идею: добавить экспорт базы знаний AICloud в Markdown и быструю синхронизацию с Obsidian',
+        'Напомни завтра в 11:00 проверить нагрузку на PostgreSQL и время отклика Groq Whisper Turbo'
+      ];
+      let voicePhraseIdx = 0;
+
+      function toggleVoiceRecording() {
+        if (state.isRecording) {
+          finishVoiceRecording();
+          return;
+        }
+        state.isRecording = true;
+        state.recSeconds = 0;
+        const targetPhrase = DEMO_VOICE_PHRASES[voicePhraseIdx % DEMO_VOICE_PHRASES.length];
+        voicePhraseIdx++;
+        const words = targetPhrase.split(' ');
+        let wordIndex = 0;
+        state.recTranscript = '';
+
+        recordVoiceBtn.classList.add('recording');
+        recordBtnLabel.textContent = 'Стоп';
+        recordingBanner.classList.add('active');
+        recStreamText.textContent = 'Слушаю через Groq Whisper Turbo...';
+        recTimer.textContent = '0:00';
+
+        recIntervalId = setInterval(() => {
+          state.recSeconds += 1;
+          recTimer.textContent = formatTime(state.recSeconds);
+          if (wordIndex < words.length) {
+            const step = Math.min(words.length, wordIndex + 2);
+            state.recTranscript = words.slice(0, step).join(' ');
+            wordIndex = step;
+            recStreamText.textContent = state.recTranscript + '...';
+            composerInput.value = state.recTranscript;
+          } else {
+            finishVoiceRecording();
+          }
+        }, 520);
+      }
+
+      function finishVoiceRecording() {
+        if (recIntervalId) {
+          clearInterval(recIntervalId);
+          recIntervalId = null;
+        }
+        state.isRecording = false;
+        recordVoiceBtn.classList.remove('recording');
+        recordBtnLabel.textContent = 'Голосовое';
+        recordingBanner.classList.remove('active');
+        if (state.recTranscript) {
+          composerInput.value = state.recTranscript;
+          composerInput.dataset.isVoiceDraft = 'true';
+          composerInput.dataset.voiceDuration = String(Math.max(4, state.recSeconds));
+          showToast('Голосовое расшифровано через Groq Whisper Turbo', ICONS.mic);
+        }
+      }
+
+      function attachFileObj(file) {
+        if (!file) return;
+        const info = detectFileCategory(file.name);
+        state.attachedFile = {
+          name: file.name,
+          size: formatBytes(file.size),
+          ext: info.ext,
+          category: info.category,
+          iconKey: info.iconKey
+        };
+        attachedFileIcon.innerHTML = getIcon(info.iconKey);
+        attachedFileName.textContent = file.name;
+        attachedFileSize.textContent = '(' + state.attachedFile.size + ')';
+        attachedFilePill.classList.add('visible');
+        showToast('Файл ' + file.name + ' готов к сохранению', ICONS.file);
+      }
+
+      function clearAttachedFile() {
+        state.attachedFile = null;
+        attachedFilePill.classList.remove('visible');
+        fileInputHidden.value = '';
+      }
+
+      function createNewNote() {
+        const text = composerInput.value.trim();
+        const file = state.attachedFile;
+        if (!text && !file) {
+          showToast('Введите текст, запишите голосовое или прикрепите файл');
+          composerInput.focus();
+          return;
+        }
+
+        const isVoice = composerInput.dataset.isVoiceDraft === 'true';
+        const isUrl = /^https?:\/\//i.test(text);
+        const folderId = composerFolderSelect.value || 'personal';
+        const autoAi = aiAutoEnrichToggle.checked;
+
+        let newNote = {
+          id: 'note-' + Date.now(),
+          type: 'note',
+          title: text ? (text.length > 54 ? text.slice(0, 54) + '...' : text) : file.name,
+          content: text || ('Сохраненный файл ' + file.name),
+          aiSummary: '',
+          folder: folderId,
+          createdAt: 'Только что',
+          tags: ['#aicloud'],
+          semanticKeywords: text.toLowerCase().split(/\s+/).filter(w => w.length > 2),
+          reminder: ''
+        };
+
+        if (isVoice) {
+          newNote.type = 'voice';
+          newNote.durationSec = Number(composerInput.dataset.voiceDuration || 7);
+          newNote.waveform = Array.from({ length: 28 }, () => Math.floor(24 + Math.random() * 72));
+          newNote.tags.push('#voice');
+        } else if (file) {
+          newNote.type = 'file';
+          newNote.fileName = file.name;
+          newNote.fileSize = file.size;
+          newNote.ext = file.ext;
+          newNote.fileCategory = file.category;
+          newNote.fileIconKey = file.iconKey;
+          newNote.title = file.name;
+          newNote.tags.push('#' + file.ext);
+          newNote.semanticKeywords.push(file.ext, file.category, file.name.toLowerCase());
+        } else if (isUrl) {
+          newNote.type = 'link';
+          newNote.url = text;
+          try {
+            newNote.domain = new URL(text).hostname;
+          } catch (e) {
+            newNote.domain = 'web';
+          }
+          newNote.title = 'Ссылка: ' + newNote.domain;
+          newNote.tags.push('#link');
+        }
+
+        if (autoAi) {
+          newNote.aiSummary = generateAiEnrichmentText(newNote.title, newNote.content, newNote.type);
+        }
+
+        state.notes.unshift(newNote);
+        composerInput.value = '';
+        delete composerInput.dataset.isVoiceDraft;
+        delete composerInput.dataset.voiceDuration;
+        clearAttachedFile();
+
+        renderSidebar();
+        renderNotes();
+        showToast(autoAi ? 'Запись сохранена и дополнена ИИ' : 'Запись добавлена в AICloud', ICONS.sparkle);
+      }
+
+      function resetAllFilters() {
+        state.activeQuickFilter = 'all';
+        state.activeFolder = null;
+        state.activeExtCategory = null;
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.remove('visible');
+        renderSidebar();
+        renderNotes();
+      }
+
+      /* ---------- Event Listeners ---------- */
+      collapseSidebarBtn.addEventListener('click', () => {
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+        sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
+        collapseSidebarBtn.innerHTML = state.sidebarCollapsed
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+      });
+
+      function closeMobileMenu() {
+        sidebar.classList.remove('mobile-open');
+        mobileOverlay.classList.remove('visible');
+      }
+
+      mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.add('mobile-open');
+        mobileOverlay.classList.add('visible');
+      });
+
+      mobileOverlay.addEventListener('click', closeMobileMenu);
+
+      quickFiltersList.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-quick-filter]');
+        if (!btn) return;
+        state.activeQuickFilter = btn.dataset.quickFilter;
+        state.activeFolder = null;
+        state.activeExtCategory = null;
+        renderSidebar();
+        renderNotes();
+        closeMobileMenu();
+      });
+
+      foldersList.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-folder-filter]');
+        if (!btn) return;
+        const fid = btn.dataset.folderFilter;
+        state.activeFolder = state.activeFolder === fid ? null : fid;
+        state.activeQuickFilter = 'all';
+        state.activeExtCategory = null;
+        renderSidebar();
+        renderNotes();
+        closeMobileMenu();
+      });
+
+      extGrid.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-ext-cat]');
+        if (!btn) return;
+        const cat = btn.dataset.extCat;
+        state.activeExtCategory = state.activeExtCategory === cat ? null : cat;
+        state.activeQuickFilter = 'all';
+        state.activeFolder = null;
+        renderSidebar();
+        renderNotes();
+        closeMobileMenu();
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle('visible', state.searchQuery.length > 0);
+        renderNotes();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.remove('visible');
+        renderNotes();
+        searchInput.focus();
+      });
+
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.searchMode = btn.dataset.mode;
+          renderNotes();
+        });
+      });
+
+      document.querySelectorAll('.suggest-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const q = chip.dataset.query;
+          const m = chip.dataset.mode || 'hybrid';
+          state.searchQuery = q;
+          state.searchMode = m;
+          searchInput.value = q;
+          clearSearchBtn.classList.add('visible');
+          document.querySelectorAll('.mode-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.mode === m);
+          });
+          renderNotes();
+        });
+      });
+
+      viewBentoBtn.addEventListener('click', () => {
+        state.viewMode = 'bento';
+        viewBentoBtn.classList.add('active');
+        viewListBtn.classList.remove('active');
+        renderNotes();
+      });
+
+      viewListBtn.addEventListener('click', () => {
+        state.viewMode = 'list';
+        viewListBtn.classList.add('active');
+        viewBentoBtn.classList.remove('active');
+        renderNotes();
+      });
+
+      themeToggleBtn.addEventListener('click', () => {
+        applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+        showToast(state.theme === 'dark' ? 'Ночная тема Telegram' : 'Светлая тема Telegram', state.theme === 'dark' ? ICONS.moon : ICONS.sun);
+      });
+
+      resetFiltersBtn.addEventListener('click', resetAllFilters);
+
+      /* Delegated Events */
+      function handleInteractiveClick(e) {
+        const playBtn = e.target.closest('[data-action="play-voice"]');
+        if (playBtn) {
+          e.stopPropagation();
+          toggleVoicePlay(playBtn.dataset.id);
+          return true;
+        }
+
+        const speedBtn = e.target.closest('[data-action="speed-voice"]');
+        if (speedBtn) {
+          e.stopPropagation();
+          cycleVoiceSpeed(speedBtn.dataset.id);
+          return true;
+        }
+
+        const wave = e.target.closest('[data-action="seek-voice"]');
+        if (wave) {
+          e.stopPropagation();
+          const rect = wave.getBoundingClientRect();
+          const ratio = rect.width > 0 ? (e.clientX - rect.left) / rect.width : 0;
+          seekVoice(wave.dataset.id, ratio);
+          return true;
+        }
+
+        const copyCodeBtn = e.target.closest('[data-action="copy-code"]');
+        if (copyCodeBtn) {
+          e.stopPropagation();
+          const n = state.notes.find(x => x.id === copyCodeBtn.dataset.id);
+          if (n && n.codeSnippet) copyText(n.codeSnippet, 'Код скопирован');
+          return true;
+        }
+
+        const copyNoteBtn = e.target.closest('[data-action="copy-note"]');
+        if (copyNoteBtn) {
+          e.stopPropagation();
+          const n = state.notes.find(x => x.id === copyNoteBtn.dataset.id);
+          if (n) copyText(n.title + '\n' + n.content, 'Текст заметки скопирован');
+          return true;
+        }
+
+        const openBtn = e.target.closest('[data-action="open-note"]');
+        if (openBtn) {
+          e.stopPropagation();
+          openNoteModal(openBtn.dataset.id);
+          return true;
+        }
+
+        return false;
+      }
+
+      notesGrid.addEventListener('click', (e) => {
+        if (handleInteractiveClick(e)) return;
+        if (e.target.closest('[data-stop-card="true"]')) return;
+        const card = e.target.closest('.note-card');
+        if (card) {
+          openNoteModal(card.dataset.noteId);
+        }
+      });
+
+      modalMediaSlot.addEventListener('click', (e) => {
+        handleInteractiveClick(e);
+      });
+
+      /* Composer Interactions */
+      recordVoiceBtn.addEventListener('click', toggleVoiceRecording);
+      attachFileBtn.addEventListener('click', () => fileInputHidden.click());
+      fileInputHidden.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          attachFileObj(e.target.files[0]);
+        }
+      });
+      removeAttachedBtn.addEventListener('click', clearAttachedFile);
+      saveNoteBtn.addEventListener('click', createNewNote);
+
+      composerInput.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          createNewNote();
+        }
+      });
+
+      /* Drag & Drop */
+      ['dragenter', 'dragover'].forEach(evName => {
+        composerDropZone.addEventListener(evName, (e) => {
+          e.preventDefault();
+          composerDropZone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evName => {
+        composerDropZone.addEventListener(evName, (e) => {
+          e.preventDefault();
+          composerDropZone.classList.remove('drag-over');
+        });
+      });
+
+      composerDropZone.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          attachFileObj(e.dataTransfer.files[0]);
+        }
+      });
+
+      /* Dialog Controls */
+      setupDialogLightDismiss(noteDialog);
+      setupDialogLightDismiss(helpDialog);
+      setupDialogLightDismiss(folderDialog);
+
+      closeNoteDialogBtn.addEventListener('click', () => noteDialog.close());
+      openHelpBtn.addEventListener('click', () => helpDialog.showModal());
+      closeHelpDialogBtn.addEventListener('click', () => helpDialog.close());
+
+      modalEnrichBtn.addEventListener('click', () => {
+        const note = state.notes.find(n => n.id === state.editingNoteId);
+        if (!note) return;
+        modalEnrichBtn.disabled = true;
+        modalEnrichBtn.innerHTML = ICONS.sparkle + ' <span>Генерация...</span>';
+        setTimeout(() => {
+          editNoteAi.value = generateAiEnrichmentText(editNoteTitle.value, editNoteContent.value, note.type);
+          modalEnrichBtn.disabled = false;
+          modalEnrichBtn.innerHTML = ICONS.sparkle + ' <span>Дополнить с ИИ</span>';
+          showToast('Блок AI Enrichment обновлен', ICONS.sparkle);
+        }, 480);
+      });
+
+      saveModalNoteBtn.addEventListener('click', () => {
+        const note = state.notes.find(n => n.id === state.editingNoteId);
+        if (!note) return;
+        note.title = editNoteTitle.value.trim() || note.title;
+        note.content = editNoteContent.value.trim();
+        note.aiSummary = editNoteAi.value.trim();
+        note.folder = editNoteFolder.value;
+        note.reminder = editNoteReminder.value;
+        note.reminderLabel = note.reminder ? note.reminder.replace('T', ', ') : '';
+        noteDialog.close();
+        renderSidebar();
+        renderNotes();
+        showToast('Изменения сохранены', ICONS.folder);
+      });
+
+      deleteNoteBtn.addEventListener('click', () => {
+        if (!state.editingNoteId) return;
+        if (playback.activeId === state.editingNoteId) stopPlayback();
+        state.notes = state.notes.filter(n => n.id !== state.editingNoteId);
+        state.editingNoteId = null;
+        noteDialog.close();
+        renderSidebar();
+        renderNotes();
+        showToast('Запись удалена');
+      });
+
+      /* New Folder Dialog */
+      function renderFolderIconPicker() {
+        folderIconPicker.innerHTML = FOLDER_ICON_CHOICES.map(c => {
+          const selected = state.selectedFolderIconKey === c.key;
+          return `
+            <button type="button" class="icon-choice${selected ? ' selected' : ''}" data-icon-key="${c.key}" title="${c.label}">
+              ${getIcon(c.key)}
+            </button>
+          `;
+        }).join('');
+      }
+
+      openNewFolderBtn.addEventListener('click', () => {
+        newFolderNameInput.value = '';
+        renderFolderIconPicker();
+        folderDialog.showModal();
+        setTimeout(() => newFolderNameInput.focus(), 60);
+      });
+
+      closeFolderDialogBtn.addEventListener('click', () => folderDialog.close());
+      cancelFolderBtn.addEventListener('click', () => folderDialog.close());
+
+      folderIconPicker.addEventListener('click', (e) => {
+        const btn = e.target.closest('.icon-choice');
+        if (!btn) return;
+        folderIconPicker.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.selectedFolderIconKey = btn.dataset.iconKey;
+      });
+
+      confirmFolderBtn.addEventListener('click', () => {
+        const name = newFolderNameInput.value.trim();
+        if (!name) {
+          showToast('Введите название папки');
+          return;
+        }
+        const id = 'folder-' + Date.now();
+        state.folders.push({ id, name, iconKey: state.selectedFolderIconKey || 'folder' });
+        folderDialog.close();
+        renderSidebar();
+        showToast('Папка «' + name + '» создана', getIcon(state.selectedFolderIconKey));
+      });
+
+      newFolderNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          confirmFolderBtn.click();
+        }
+      });
+
+      /* Keyboard Shortcuts */
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+        if (e.key === 'Escape') {
+          if (document.activeElement === searchInput) {
+            clearSearchBtn.click();
+            searchInput.blur();
+          }
+          closeMobileMenu();
+        }
+      });
+
+      /* ---------- Init ---------- */
+      initTheme();
+      renderSidebar();
+      renderNotes();
+    })();
+  </script>
+</body>
+</html>

@@ -5,32 +5,67 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/mymmrac/telego"
 )
 
-// ExtractMediaInfo извлекает тип, ID файла и имя из сообщения Telegram
+// ExtractMediaInfo извлекает тип, ID файла, имя и расширение/тип файла из сообщения Telegram
 func ExtractMediaInfo(msg telego.Message) models.MediaInfo {
 	switch {
 	case len(msg.Photo) > 0:
 		return models.MediaInfo{
 			TargetType: "photo",
+			FileType:   "photo",
 			FileID:     msg.Photo[len(msg.Photo)-1].FileID,
 		}
 	case msg.Document != nil:
+		ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(msg.Document.FileName), "."))
+		if ext == "" && msg.Document.MimeType != "" {
+			parts := strings.Split(msg.Document.MimeType, "/")
+			if len(parts) == 2 {
+				ext = strings.ToLower(parts[1])
+			}
+		}
 		return models.MediaInfo{
 			TargetType: "file",
+			FileType:   ext,
 			FileID:     msg.Document.FileID,
 			FileName:   msg.Document.FileName,
 		}
 	case msg.Voice != nil:
 		return models.MediaInfo{
 			TargetType: "voice",
+			FileType:   "voice",
 			FileID:     msg.Voice.FileID,
+		}
+	case msg.Video != nil:
+		ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(msg.Video.FileName), "."))
+		if ext == "" {
+			ext = "mp4"
+		}
+		return models.MediaInfo{
+			TargetType: "file",
+			FileType:   ext,
+			FileID:     msg.Video.FileID,
+			FileName:   msg.Video.FileName,
+		}
+	case msg.Audio != nil:
+		ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(msg.Audio.FileName), "."))
+		if ext == "" {
+			ext = "mp3"
+		}
+		return models.MediaInfo{
+			TargetType: "file",
+			FileType:   ext,
+			FileID:     msg.Audio.FileID,
+			FileName:   msg.Audio.FileName,
 		}
 	default:
 		return models.MediaInfo{
 			TargetType: "message",
+			FileType:   "text",
 		}
 	}
 }

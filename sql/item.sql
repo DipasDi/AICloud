@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS items (
         target_type IN ('file', 'message', 'photo', 'link', 'voice')
     ),
     tg_file_id TEXT NOT NULL DEFAULT '',
+    file_type TEXT NOT NULL DEFAULT '',
+    file_size BIGINT NOT NULL DEFAULT 0,
     tg_message_id BIGINT NOT NULL DEFAULT 0,
     file_name TEXT NOT NULL DEFAULT '',
     comment TEXT NOT NULL DEFAULT '',
@@ -27,7 +29,7 @@ CREATE TABLE IF NOT EXISTS items (
         ) || setweight(
             to_tsvector(
                 'russian',
-                coalesce(file_name, '') || ' ' || coalesce(group_name, '')
+                coalesce(file_name, '') || ' ' || coalesce(file_type, '') || ' ' || coalesce(group_name, '')
             ),
             'B'
         )
@@ -37,6 +39,8 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE INDEX IF NOT EXISTS idx_items_user_chat ON items(user_id, chat_id);
 CREATE INDEX IF NOT EXISTS idx_items_group ON items(user_id, group_name);
 CREATE INDEX IF NOT EXISTS idx_items_type ON items(user_id, target_type);
+CREATE INDEX IF NOT EXISTS idx_items_file_type ON items(user_id, file_type);
+CREATE INDEX IF NOT EXISTS idx_items_file_size ON items(user_id, file_size DESC);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_items_chat_msg ON items(chat_id, tg_message_id)
 WHERE tg_message_id <> 0;
 -- Поиск

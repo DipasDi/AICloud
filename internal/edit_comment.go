@@ -135,6 +135,9 @@ func HandleEditCommentWithStatus(ctx *th.Context, message telego.Message, newTex
 			tu.InlineKeyboardButton("📁 В папку").WithCallbackData(fmt.Sprintf("folder:%d", itemID)),
 			tu.InlineKeyboardButton("🗑 Удалить").WithCallbackData(fmt.Sprintf("delete:%d", itemID)),
 		),
+		tu.InlineKeyboardRow(
+			tu.InlineKeyboardButton("❌ Скрыть").WithCallbackData("hide"),
+		),
 	)
 
 	_, _ = ctx.Bot().EditMessageText(ctx, tu.EditMessageText(

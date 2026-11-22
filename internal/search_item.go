@@ -37,6 +37,7 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 		SELECT 
 			id,
 			target_type,
+			file_type,
 			tg_file_id,
 			tg_message_id,
 			file_name,
@@ -63,6 +64,7 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 		err := rows.Scan(
 			&it.ID,
 			&it.TargetType,
+			&it.FileType,
 			&it.TgFileID,
 			&it.TgMessageID,
 			&it.FileName,
@@ -104,6 +106,7 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 		SELECT 
 			id,
 			target_type,
+			file_type,
 			tg_file_id,
 			tg_message_id,
 			file_name,
@@ -130,6 +133,7 @@ func SearchItem(ctx *th.Context, message telego.Message, text string) error {
 		err := vRows.Scan(
 			&it.ID,
 			&it.TargetType,
+			&it.FileType,
 			&it.TgFileID,
 			&it.TgMessageID,
 			&it.FileName,
@@ -205,19 +209,46 @@ func sendSearchResults(ctx *th.Context, statusMsg *telego.Message, title string,
 	).WithParseMode(telego.ModeHTML).WithReplyMarkup(hideKeyboard))
 }
 
+// getItemIcon возвращает подходящую иконку в зависимости от target_type и file_type
+func getItemIcon(it models.Item) string {
+	switch it.TargetType {
+	case "photo":
+		return "🖼"
+	case "voice":
+		return "🎙"
+	case "link":
+		return "🔗"
+	case "file":
+		switch it.FileType {
+		case "zip", "rar", "7z", "tar", "gz":
+			return "📦"
+		case "exe", "msi", "bat", "cmd", "apk":
+			return "⚙️"
+		case "pdf":
+			return "📕"
+		case "doc", "docx", "txt", "rtf", "md":
+			return "📄"
+		case "xls", "xlsx", "csv":
+			return "📊"
+		case "ppt", "pptx":
+			return "📽"
+		case "mp3", "wav", "flac", "ogg", "m4a":
+			return "🎵"
+		case "mp4", "mkv", "avi", "mov":
+			return "🎬"
+		case "py", "go", "js", "ts", "html", "css", "json", "sql":
+			return "💻"
+		default:
+			return "📁"
+		}
+	default:
+		return "💬"
+	}
+}
+
 // formatSingleItem форматирует одну найденную запись
 func formatSingleItem(it models.Item) string {
-	icon := "💬"
-	switch it.TargetType {
-	case "file":
-		icon = "📄"
-	case "photo":
-		icon = "🖼"
-	case "voice":
-		icon = "🎙"
-	case "link":
-		icon = "🔗"
-	}
+	icon := getItemIcon(it)
 
 	header := ""
 	if it.FileName != "" {
@@ -225,8 +256,8 @@ func formatSingleItem(it models.Item) string {
 	}
 
 	comment := it.Comment
-	if len([]rune(comment)) > 200 {
-		comment = string([]rune(comment)[:200]) + "..."
+	if len([]rune(comment)) > 300 {
+		comment = string([]rune(comment)[:300]) + "..."
 	}
 
 	var sb strings.Builder
@@ -245,17 +276,7 @@ func formatSearchResults(title string, items []models.Item) string {
 	sb.WriteString(fmt.Sprintf("%s <i>(%d)</i>\n\n", title, len(items)))
 
 	for i, it := range items {
-		icon := "💬"
-		switch it.TargetType {
-		case "file":
-			icon = "📄"
-		case "photo":
-			icon = "🖼"
-		case "voice":
-			icon = "🎙"
-		case "link":
-			icon = "🔗"
-		}
+		icon := getItemIcon(it)
 
 		header := ""
 		if it.FileName != "" {

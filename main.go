@@ -3,6 +3,7 @@ package main
 import (
 	"AICloud/internal"
 	"AICloud/internal/database"
+	"AICloud/internal/web"
 	"context"
 	"fmt"
 	"os"
@@ -34,6 +35,7 @@ func main() {
 	bh, _ := th.NewBotHandler(bot, updates)
 
 	go internal.NewHandler(bh, bot)
+	go web.StartWebServer("")
 	// go ai.AnalyzerText("Блин, не понимаю, мне вроде как завтра нужно будет зайти в деконат сдать документы")
 
 	// Stop handling updates

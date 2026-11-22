@@ -72,6 +72,7 @@ func HandleSaveItemWithStatus(ctx *th.Context, message telego.Message, text stri
 				user_id,
 				chat_id,
 				target_type,
+				file_type,
 				tg_file_id,
 				tg_message_id,
 				file_name,
@@ -79,19 +80,20 @@ func HandleSaveItemWithStatus(ctx *th.Context, message telego.Message, text stri
 				group_name,
 				embedding,
 				embedding_model
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 
 	args = append(args,
 		userID,                   // $1: user_id
 		message.Chat.ID,          // $2: chat_id
 		mediaInfo.TargetType,     // $3: target_type
-		mediaInfo.FileID,         // $4: tg_file_id
-		message.MessageID,        // $5: tg_message_id
-		mediaInfo.FileName,       // $6: file_name
-		text,                     // $7: comment
-		"",                       // $8: group_name
-		FormatVector(embedding),  // $9: embedding
-		os.Getenv("EMBED_MODEL"), // $10: embedding_model
+		mediaInfo.FileType,       // $4: file_type
+		mediaInfo.FileID,         // $5: tg_file_id
+		message.MessageID,        // $6: tg_message_id
+		mediaInfo.FileName,       // $7: file_name
+		text,                     // $8: comment
+		"",                       // $9: group_name
+		FormatVector(embedding),  // $10: embedding
+		os.Getenv("EMBED_MODEL"), // $11: embedding_model
 	)
 
 	var itemID int64
@@ -134,6 +136,9 @@ func HandleSaveItemWithStatus(ctx *th.Context, message telego.Message, text stri
 			tu.InlineKeyboardButton("⏰ Напомнить").WithCallbackData(fmt.Sprintf("remind:%d", itemID)),
 			tu.InlineKeyboardButton("📁 В папку").WithCallbackData(fmt.Sprintf("folder:%d", itemID)),
 			tu.InlineKeyboardButton("🗑 Удалить").WithCallbackData(fmt.Sprintf("delete:%d", itemID)),
+		),
+		tu.InlineKeyboardRow(
+			tu.InlineKeyboardButton("❌ Скрыть").WithCallbackData("hide"),
 		),
 	)
 

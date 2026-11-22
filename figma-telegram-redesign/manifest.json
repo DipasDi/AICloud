@@ -1,0 +1,9 @@
+{
+  "name": "Telegram Redesign (Page 1-7 & Responsive)",
+  "id": "telegram-redesign-aicloud",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"]
+}
